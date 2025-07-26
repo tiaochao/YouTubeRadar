@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+  output: process.env.BUILD_STATIC === 'true' ? 'export' : process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -17,8 +17,6 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
-  // 确保客户端渲染
-  swcMinify: true,
 }
 
 export default nextConfig

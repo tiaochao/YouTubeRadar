@@ -78,7 +78,8 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(git remote:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(PORT=3001 npm run start)"
     ],
     "deny": []
   }

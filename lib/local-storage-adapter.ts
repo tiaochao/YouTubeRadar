@@ -5,6 +5,8 @@ interface Channel {
   title: string
   handle: string
   thumbnailUrl?: string
+  viewCount?: bigint | number
+  subscriberCount?: bigint | number
   createdAt: Date
   updatedAt: Date
 }
@@ -17,7 +19,7 @@ interface Video {
   viewCount: number
 }
 
-class LocalStorageAdapter {
+export class LocalStorageAdapter {
   private dbName = 'youtube-radar-local'
 
   // 获取所有频道
