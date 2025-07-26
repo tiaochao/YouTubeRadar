@@ -72,7 +72,13 @@
       "Bash(\"dist-electron/mac-arm64/YouTube Radar.app/Contents/MacOS/YouTube Radar\")",
       "Bash(./create-windows-icons.sh:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(vercel:*)"
     ],
     "deny": []
   }
