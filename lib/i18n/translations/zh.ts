@@ -137,6 +137,10 @@ export const zh = {
   settings: {
     title: '设置',
     language: '语言',
+    general: '通用',
+    generalSettings: '通用设置',
+    generalSettingsDescription: '配置应用程序的通用选项',
+    languageDescription: '选择您偏好的界面语言',
     goToSettings: '前往设置',
     database: '数据库',
     security: '安全配置',

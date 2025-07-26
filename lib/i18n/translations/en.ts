@@ -137,6 +137,10 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    general: 'General',
+    generalSettings: 'General Settings',
+    generalSettingsDescription: 'Configure general application options',
+    languageDescription: 'Choose your preferred interface language',
     goToSettings: 'Go to Settings',
     database: 'Database',
     security: 'Security Config',
