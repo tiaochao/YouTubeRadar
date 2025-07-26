@@ -1,12 +1,14 @@
 [build]
-  command = "npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
+  NODE_VERSION = "18"
   NEXT_PUBLIC_YOUTUBE_API_KEY = "AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4"
+  NEXT_PUBLIC_USE_LOCAL_STORAGE = "true"
 
 [[redirects]]
   from = "/api/*"
