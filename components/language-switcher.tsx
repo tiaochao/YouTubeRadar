@@ -11,8 +11,36 @@ import { Languages } from "lucide-react"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { localeNames, locales } from "@/lib/i18n/config"
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  compact?: boolean
+}
+
+export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
   const { locale, setLocale } = useI18n()
+
+  if (compact) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-5 w-5">
+            <Languages className="h-5 w-5" />
+            <span className="sr-only">{localeNames[locale]}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center" side="right">
+          {locales.map((loc) => (
+            <DropdownMenuItem
+              key={loc}
+              onClick={() => setLocale(loc)}
+              className={locale === loc ? "bg-accent" : ""}
+            >
+              {localeNames[loc]}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
 
   return (
     <DropdownMenu>

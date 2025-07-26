@@ -12,7 +12,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { RadarScan } from "@/components/ui/logo"
-import { LanguageSwitcher } from "@/components/language-switcher"
 
 interface ConfigData {
   databaseUrl: string
@@ -180,35 +179,12 @@ export default function SettingsPage() {
         </Alert>
       )}
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">{t('settings.general')}</TabsTrigger>
+      <Tabs defaultValue="youtube" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="youtube">YouTube API</TabsTrigger>
           <TabsTrigger value="database">{t('settings.database')}</TabsTrigger>
           <TabsTrigger value="sync">{t('settings.autoSync')}</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings.generalSettings')}</CardTitle>
-              <CardDescription>
-                {t('settings.generalSettingsDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('settings.language')}</Label>
-                <div className="flex items-center gap-2">
-                  <LanguageSwitcher />
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.languageDescription')}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="youtube" className="space-y-4">
           <Card>

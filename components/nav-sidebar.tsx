@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { HomeIcon, BarChartIcon, VideoIcon, YoutubeIcon, SettingsIcon, TrendingUpIcon, Radar } from "lucide-react"
+import { HomeIcon, BarChartIcon, VideoIcon, YoutubeIcon, SettingsIcon, TrendingUpIcon, Radar, Languages } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo } from "@/components/ui/logo"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function NavSidebar() {
   const { t } = useI18n()
@@ -91,6 +92,18 @@ export function NavSidebar() {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right">{t('navigation.settings')}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </nav>
+      <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center justify-center">
+                <LanguageSwitcher compact />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('settings.language')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </nav>
