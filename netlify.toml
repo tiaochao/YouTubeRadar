@@ -9,3 +9,11 @@
   NODE_VERSION = "18"
   NEXT_PUBLIC_YOUTUBE_API_KEY = "AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4"
   NEXT_PUBLIC_USE_LOCAL_STORAGE = "true"
+  NEXT_PRIVATE_TARGET = "server"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"

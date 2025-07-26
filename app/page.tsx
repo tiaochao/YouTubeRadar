@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -25,6 +25,7 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo, RadarScan } from "@/components/ui/logo"
+import { useLocalStats } from "@/lib/use-local-stats"
 
 interface DashboardStats {
   totalChannels: number
@@ -50,40 +51,17 @@ interface DashboardStats {
 
 export default function HomePage() {
   const { t } = useI18n()
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const { loading, stats, refresh } = useLocalStats()
   const [syncing, setSyncing] = useState(false)
-
-  useEffect(() => {
-    fetchDashboardStats()
-  }, [])
-
-  const fetchDashboardStats = async () => {
-    try {
-      const response = await fetch('/api/dashboard/stats')
-      const data = await response.json()
-      
-      if (data.ok) {
-        setStats(data.data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch dashboard stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const syncAllChannels = async () => {
     setSyncing(true)
     try {
-      const response = await fetch('/api/channels/sync-all', {
-        method: 'POST'
-      })
-      if (response.ok) {
-        await fetchDashboardStats()
-      }
+      // 在客户端模式下，同步操作通过其他页面完成
+      // 这里只是刷新本地数据
+      await refresh()
     } catch (error) {
-      console.error('Failed to sync all channels:', error)
+      console.error('Failed to sync:', error)
     } finally {
       setSyncing(false)
     }
