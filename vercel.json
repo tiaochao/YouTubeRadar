@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_YOUTUBE_API_KEY": "@youtube-api-key"
+  },
+  "crons": [
+    {
+      "path": "/api/cron/sync-all-channels",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

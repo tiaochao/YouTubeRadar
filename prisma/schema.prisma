@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id                String              @id @default(uuid())
+  channelId         String              @unique @map("channel_id")
+  title             String
+  description       String?
+  thumbnailUrl      String?             @map("thumbnail_url")
+  status            ChannelStatus       @default(active)
+  country           String?
+  timezone          String?             @default("UTC")
+  customUrl         String?             @map("custom_url")
+  publishedAt       DateTime?           @map("published_at")
+  videoCount        Int?                @map("video_count")
+  viewCount         BigInt?             @map("view_count")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  lastAnalyticsAt   DateTime?           @map("last_analytics_at")
+  lastVideoSyncAt   DateTime?           @map("last_video_sync_at")
+  totalViews        BigInt?             @map("total_views")
+  totalSubscribers  BigInt?             @map("total_subscribers")
+  note              String?             @map("note")
+  dailyStats        ChannelDailyStat[]
+  VideoStatSnapshot VideoStatSnapshot[]
+  videos            Video[]
+
+  @@index([status])
+  @@index([title])
+  @@index([totalViews])
+  @@index([totalSubscribers])
+  @@map("channels")
+}
+
+model Video {
+  id          String              @id @default(uuid())
+  videoId     String              @unique @map("video_id")
+  channelId   String              @map("channel_id")
+  title       String
+  publishedAt DateTime            @map("published_at")
+  live        Boolean             @default(false)
+  duration    String?             @map("duration") // ISO 8601 duration format
+  createdAt   DateTime            @default(now()) @map("created_at")
+  snapshots   VideoStatSnapshot[]
+  channel     Channel             @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@index([publishedAt])
+  @@index([title])
+  @@map("videos")
+}
+
+model VideoStatSnapshot {
+  id           String   @id @default(uuid())
+  videoId      String   @map("video_id")
+  channelId    String   @map("channel_id")
+  collectedAt  DateTime @default(now()) @map("collected_at")
+  viewCount    BigInt   @map("view_count")
+  likeCount    BigInt   @map("like_count")
+  commentCount BigInt   @map("comment_count")
+  channel      Channel  @relation(fields: [channelId], references: [id])
+  video        Video    @relation(fields: [videoId], references: [id])
+
+  @@unique([videoId, collectedAt])
+  @@index([channelId, collectedAt])
+  @@index([videoId, collectedAt])
+  @@index([viewCount])
+  @@map("video_stat_snapshots")
+}
+
+model ChannelDailyStat {
+  id                      String   @id @default(uuid())
+  channelId               String   @map("channel_id")
+  date                    DateTime @db.Date
+  views                   BigInt
+  watchTimeHours          Float    @map("watch_time_hours")
+  subscribersGained       Int      @map("subscribers_gained")
+  subscribersLost         Int      @map("subscribers_lost")
+  estimatedMinutesWatched BigInt   @map("estimated_minutes_watched")
+  impressions             BigInt
+  impressionCtr           Float    @map("impression_ctr")
+  videosPublished         Int      @default(0) @map("videos_published")
+  videosPublishedLive     Int      @default(0) @map("videos_published_live")
+  totalVideoViews         BigInt   @default(0) @map("total_video_views")
+  avgViewsPerVideo        Float    @default(0) @map("avg_views_per_video")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  channel                 Channel  @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, date])
+  @@index([channelId, date])
+  @@index([views])
+  @@index([subscribersGained])
+  @@index([videosPublished])
+  @@map("channel_daily_stats")
+}
+
+model TaskLog {
+  id         String    @id @default(uuid())
+  taskType   TaskType  @map("task_type")
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  success    Boolean
+  message    String?
+  durationMs Int?      @map("duration_ms")
+
+  @@index([taskType])
+  @@index([startedAt])
+  @@index([success])
+  @@map("task_logs")
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_config")
+}
+
+enum ChannelStatus {
+  active
+  syncing
+}
+
+enum TaskType {
+  VIDEO_SYNC
+  CHANNEL_HOURLY
+  CHANNEL_DAILY
+  PUBSUB_NEW_VIDEO
+}

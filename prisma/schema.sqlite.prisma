@@ -1,0 +1,107 @@
+// This is your Prisma schema file for SQLite (Desktop version)
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-sqlite"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./youtube-analytics.db"
+}
+
+model Channel {
+  id               String    @id @default(cuid())
+  channelId        String    @unique
+  title            String
+  note             String?
+  thumbnailUrl     String?
+  status           String    @default("active")
+  country          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lastAnalyticsAt  DateTime?
+  lastVideoSyncAt  DateTime?
+  
+  // Stats
+  totalViews       String?
+  totalSubscribers String?
+  
+  videos           Video[]
+  dailyStats       DailyStat[]
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  videoId     String   @unique
+  channelId   String
+  title       String
+  publishedAt DateTime
+  live        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  channel     Channel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  snapshots   VideoSnapshot[]
+  
+  @@index([channelId])
+  @@index([publishedAt])
+}
+
+model VideoSnapshot {
+  id           String   @id @default(cuid())
+  videoId      String
+  channelId    String
+  collectedAt  DateTime @default(now())
+  viewCount    String   @default("0")
+  likeCount    String   @default("0")
+  commentCount String   @default("0")
+  
+  video        Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  @@index([videoId])
+  @@index([collectedAt])
+}
+
+model DailyStat {
+  id                       String   @id @default(cuid())
+  channelId                String
+  date                     DateTime
+  views                    String   @default("0")
+  watchTimeHours           Float    @default(0)
+  subscribersGained        Int      @default(0)
+  subscribersLost          Int      @default(0)
+  estimatedMinutesWatched  String   @default("0")
+  impressions              String   @default("0")
+  impressionCtr            Float    @default(0)
+  updatedAt                DateTime @updatedAt
+  
+  channel                  Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  
+  @@unique([channelId, date])
+  @@index([channelId])
+  @@index([date])
+}
+
+model TaskLog {
+  id          String    @id @default(cuid())
+  taskType    String
+  channelId   String?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  success     Boolean   @default(false)
+  message     String?
+  durationMs  Int?
+  
+  @@index([taskType])
+  @@index([startedAt])
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
