@@ -86,9 +86,9 @@ export default function ChannelsPage() {
           title: channel.snippet.title,
           handle: channel.snippet.customUrl || `@${channel.id}`,
           thumbnailUrl: channel.snippet.thumbnails.medium.url,
-          viewCount: BigInt(channel.statistics.viewCount),
-          subscriberCount: BigInt(channel.statistics.subscriberCount),
-          videoCount: parseInt(channel.statistics.videoCount),
+          viewCount: parseInt(channel.statistics.viewCount) || 0,
+          subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
+          videoCount: parseInt(channel.statistics.videoCount) || 0,
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -121,9 +121,9 @@ export default function ChannelsPage() {
       if (channel) {
         const updatedChannel = channels.find(ch => ch.id === channelId)
         if (updatedChannel) {
-          updatedChannel.viewCount = BigInt(channel.statistics.viewCount)
-          updatedChannel.subscriberCount = BigInt(channel.statistics.subscriberCount)
-          updatedChannel.videoCount = parseInt(channel.statistics.videoCount)
+          updatedChannel.viewCount = parseInt(channel.statistics.viewCount) || 0
+          updatedChannel.subscriberCount = parseInt(channel.statistics.subscriberCount) || 0
+          updatedChannel.videoCount = parseInt(channel.statistics.videoCount) || 0
           updatedChannel.updatedAt = new Date()
           adapter.updateChannel(channelId, updatedChannel)
           loadChannels()
@@ -134,15 +134,14 @@ export default function ChannelsPage() {
     }
   }
 
-  const formatNumber = (num: bigint | number | undefined): string => {
+  const formatNumber = (num: number | undefined): string => {
     if (!num) return '0'
-    const n = typeof num === 'bigint' ? Number(num) : num
-    if (n >= 1000000) {
-      return (n / 1000000).toFixed(1) + 'M'
-    } else if (n >= 1000) {
-      return (n / 1000).toFixed(1) + 'K'
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M'
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K'
     }
-    return n.toString()
+    return num.toString()
   }
 
   const filteredChannels = channels.filter(channel =>

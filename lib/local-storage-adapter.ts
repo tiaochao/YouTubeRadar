@@ -5,8 +5,9 @@ interface Channel {
   title: string
   handle: string
   thumbnailUrl?: string
-  viewCount?: bigint | number
-  subscriberCount?: bigint | number
+  viewCount?: number
+  subscriberCount?: number
+  videoCount?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -25,7 +26,15 @@ export class LocalStorageAdapter {
   // 获取所有频道
   getChannels(): Channel[] {
     const data = localStorage.getItem(`${this.dbName}-channels`)
-    return data ? JSON.parse(data) : []
+    if (!data) return []
+    
+    const channels = JSON.parse(data)
+    // 转换日期字符串为 Date 对象
+    return channels.map((ch: any) => ({
+      ...ch,
+      createdAt: new Date(ch.createdAt),
+      updatedAt: new Date(ch.updatedAt)
+    }))
   }
 
   // 添加频道
