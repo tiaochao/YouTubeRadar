@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -80,7 +80,7 @@ export default function HomePage() {
     }, timeout)
   }
 
-  const loadChannels = () => {
+  const loadChannels = useCallback(() => {
     try {
       const storedChannels = adapter.getChannels()
       setChannels(storedChannels)
@@ -89,9 +89,9 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const calculateTotalStats = () => {
+  const stats = useMemo(() => {
     const totalViews = channels.reduce((sum, ch) => sum + (ch.viewCount || 0), 0)
     const totalSubscribers = channels.reduce((sum, ch) => sum + (ch.subscriberCount || 0), 0)
     const totalVideos = channels.reduce((sum, ch) => sum + (ch.videoCount || 0), 0)
@@ -102,18 +102,16 @@ export default function HomePage() {
       totalSubscribers,
       totalVideos
     }
-  }
+  }, [channels])
 
-  const stats = calculateTotalStats()
-
-  const formatNumber = (num: number): string => {
+  const formatNumber = useCallback((num: number): string => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M'
     } else if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K'
     }
     return num.toString()
-  }
+  }, [])
 
   const handleAddChannel = async () => {
     if (!channelInput.trim()) return
@@ -176,19 +174,19 @@ export default function HomePage() {
     }
   }
 
-  const handleDeleteChannel = (channelId: string) => {
+  const handleDeleteChannel = useCallback((channelId: string) => {
     if (confirm('确定要删除这个频道吗？')) {
       adapter.deleteChannel(channelId)
       loadChannels()
     }
-  }
+  }, [loadChannels])
 
-  const handleEditNote = (channelId: string, currentNote?: string) => {
+  const handleEditNote = useCallback((channelId: string, currentNote?: string) => {
     setEditingNoteId(channelId)
     setNoteInput(currentNote || "")
-  }
+  }, [])
 
-  const handleSaveNote = (channelId: string) => {
+  const handleSaveNote = useCallback((channelId: string) => {
     const channel = channels.find(ch => ch.id === channelId)
     if (channel) {
       adapter.updateChannel(channelId, { ...channel, note: noteInput })
@@ -196,12 +194,12 @@ export default function HomePage() {
       setEditingNoteId(null)
       setNoteInput("")
     }
-  }
+  }, [channels, noteInput, loadChannels])
 
-  const handleCancelNote = () => {
+  const handleCancelNote = useCallback(() => {
     setEditingNoteId(null)
     setNoteInput("")
-  }
+  }, [])
 
   const handleSyncAll = async () => {
     setIsSyncing(true)
@@ -258,26 +256,28 @@ export default function HomePage() {
     }
   }
 
-  const filteredChannels = channels
-    .filter(channel =>
-      channel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      channel.handle.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.title.localeCompare(b.title)
-        case 'subscribers':
-          return (b.subscriberCount || 0) - (a.subscriberCount || 0)
-        case 'views':
-          return (b.viewCount || 0) - (a.viewCount || 0)
-        case 'videos':
-          return (b.videoCount || 0) - (a.videoCount || 0)
-        case 'recent':
-        default:
-          return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
-      }
-    })
+  const filteredChannels = useMemo(() => {
+    return channels
+      .filter(channel =>
+        channel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        channel.handle.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return a.title.localeCompare(b.title)
+          case 'subscribers':
+            return (b.subscriberCount || 0) - (a.subscriberCount || 0)
+          case 'views':
+            return (b.viewCount || 0) - (a.viewCount || 0)
+          case 'videos':
+            return (b.videoCount || 0) - (a.videoCount || 0)
+          case 'recent':
+          default:
+            return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
+        }
+      })
+  }, [channels, searchQuery, sortBy])
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -453,14 +453,19 @@ export default function HomePage() {
                     <div className="flex-1">
                       <p className="font-medium">{channel.title}</p>
                       <p className="text-sm text-muted-foreground">{channel.handle}</p>
-                      {editingNoteId === channel.id ? (
+                      {editingNoteId === channel.id && (
                         <div className="flex items-center gap-2 mt-1">
                           <Input
                             value={noteInput}
                             onChange={(e) => setNoteInput(e.target.value)}
                             placeholder="添加备注..."
                             className="h-7 text-sm"
-                            onKeyPress={(e) => e.key === 'Enter' && handleSaveNote(channel.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                handleSaveNote(channel.id)
+                              }
+                            }}
                           />
                           <Button
                             size="sm"
@@ -479,10 +484,9 @@ export default function HomePage() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                      ) : (
-                        channel.note && (
-                          <p className="text-sm text-muted-foreground mt-1">{channel.note}</p>
-                        )
+                      )}
+                      {editingNoteId !== channel.id && channel.note && (
+                        <p className="text-sm text-muted-foreground mt-1">{channel.note}</p>
                       )}
                     </div>
                   </div>
