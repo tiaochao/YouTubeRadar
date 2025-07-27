@@ -1,5 +1,13 @@
 // 环境变量验证
 export function validateEnv() {
+  // 跳过验证如果设置了 SKIP_ENV_VALIDATION
+  if (process.env.SKIP_ENV_VALIDATION === 'true') {
+    return {
+      valid: true,
+      missing: [],
+      error: null
+    }
+  }
   const required = {
     DATABASE_URL: process.env.DATABASE_URL,
     YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
