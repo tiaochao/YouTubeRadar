@@ -55,6 +55,25 @@ export class LocalStorageAdapter {
     return channel
   }
 
+  // 更新频道
+  updateChannel(channelId: string, updatedData: Partial<Channel>): Channel | null {
+    const channels = this.getChannels()
+    const channelIndex = channels.findIndex(c => c.id === channelId)
+    
+    if (channelIndex === -1) {
+      return null
+    }
+    
+    channels[channelIndex] = {
+      ...channels[channelIndex],
+      ...updatedData,
+      updatedAt: new Date()
+    }
+    
+    localStorage.setItem(`${this.dbName}-channels`, JSON.stringify(channels))
+    return channels[channelIndex]
+  }
+
   // 删除频道
   deleteChannel(channelId: string): boolean {
     const channels = this.getChannels()
