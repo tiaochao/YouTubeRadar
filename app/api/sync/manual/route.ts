@@ -47,40 +47,8 @@ export async function POST(req: NextRequest) {
           }
         })
         
-        // 2. 创建今日的统计数据（如果不存在）
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        
-        // 检查是否已有今日数据
-        const existingStats = await db.channelDailyStat.findFirst({
-          where: {
-            channelId: channel.id,
-            date: {
-              gte: today,
-              lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-            }
-          }
-        })
-        
-        if (!existingStats) {
-          // 创建今日统计数据
-          await db.channelDailyStat.create({
-            data: {
-              channelId: channel.id,
-              date: today,
-              views: BigInt(Math.floor(Math.random() * 10000)), // 模拟数据
-              estimatedMinutesWatched: BigInt(Math.floor(Math.random() * 100000)),
-              averageViewDuration: Math.floor(Math.random() * 600),
-              subscribersGained: Math.floor(Math.random() * 100),
-              subscribersLost: Math.floor(Math.random() * 10),
-              videosPublished: Math.floor(Math.random() * 3),
-              videosPublishedLive: 0,
-              totalVideoViews: BigInt(channel.viewCount || 0),
-              impressions: BigInt(Math.floor(Math.random() * 50000)),
-              impressionsCtr: Math.random() * 10
-            }
-          })
-        }
+        // 不自动创建模拟的每日统计数据
+        // 真实的每日统计数据应该通过其他 API 端点或定时任务获取
         
         results.synced++
       } catch (error: any) {
