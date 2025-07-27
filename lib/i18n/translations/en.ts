@@ -60,14 +60,14 @@ export const en = {
 
   // Channels Page
   channels: {
-    title: 'Your YouTube Channels',
+    title: 'Channel Management',
     connectNew: 'Connect New Channel',
     connectFirst: 'Connect Your first Channel',
-    noChannels: 'No Channels Connected',
+    noChannels: 'No channels added yet',
     noChannelsDescription: 'Connect your first YouTube channel to start tracking its performance.',
     channelConnected: 'Channel Connected!',
     cleanTestData: 'Clean Test Data',
-    searchPlaceholder: 'Search channels by title or ID...',
+    searchPlaceholder: 'Search channels...',
     sortBy: 'Sort By',
     viewDetails: 'View Details',
     delete: 'Delete',
@@ -78,7 +78,15 @@ export const en = {
     note: 'Note',
     noNote: 'No note added',
     notePlaceholder: 'Add a note for this channel...',
-    syncAllChannels: 'Sync All Channels'
+    syncAllChannels: 'Sync All Channels',
+    addChannel: 'Add Channel',
+    notFound: 'Channel not found',
+    addError: 'Failed to add channel',
+    confirmDelete: 'Are you sure you want to delete this channel?',
+    noResults: 'No matching channels found',
+    viewOnYouTube: 'View',
+    addDescription: 'Enter channel name, @handle, or YouTube URL',
+    channelInput: 'Channel'
   },
 
   // Channel Stats
@@ -308,6 +316,7 @@ export const en = {
     channelPlaceholder: 'Filter by Channel ID...',
     notAvailable: 'N/A',
     milliseconds: '{value}ms',
+    add: 'Add',
     // Relative time
     secondsAgo: '{value} seconds ago',
     minutesAgo: '{value} minutes ago',

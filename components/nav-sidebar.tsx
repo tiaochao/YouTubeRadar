@@ -20,6 +20,17 @@ export function NavSidebar() {
           <Radar className="h-4 w-4 transition-all group-hover:rotate-45" />
           <span className="sr-only">YouTube Radar</span>
         </Link>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/50 transition-colors hover:bg-muted md:h-8 md:w-8">
+                <LanguageSwitcher />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('settings.language')}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -92,18 +103,6 @@ export function NavSidebar() {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right">{t('navigation.settings')}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </nav>
-      <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center justify-center">
-                <LanguageSwitcher compact />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('settings.language')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </nav>

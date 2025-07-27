@@ -60,14 +60,14 @@ export const zh = {
 
   // Channels Page
   channels: {
-    title: '您的YouTube频道',
+    title: '频道管理',
     connectNew: '连接新频道',
     connectFirst: '连接您的第一个频道',
-    noChannels: '暂无已连接频道',
+    noChannels: '还没有添加任何频道',
     noChannelsDescription: '连接您的第一个YouTube频道以开始跟踪其表现。',
     channelConnected: '频道已连接！',
     cleanTestData: '清理测试数据',
-    searchPlaceholder: '按标题或ID搜索频道...',
+    searchPlaceholder: '搜索频道...',
     sortBy: '排序方式',
     viewDetails: '查看详情',
     delete: '删除',
@@ -78,7 +78,15 @@ export const zh = {
     note: '备注',
     noNote: '暂无备注',
     notePlaceholder: '为此频道添加备注...',
-    syncAllChannels: '同步所有频道'
+    syncAllChannels: '同步所有频道',
+    addChannel: '添加频道',
+    notFound: '未找到频道',
+    addError: '添加频道失败',
+    confirmDelete: '确定要删除这个频道吗？',
+    noResults: '没有找到匹配的频道',
+    viewOnYouTube: '查看',
+    addDescription: '输入频道名称、@handle 或 YouTube 链接',
+    channelInput: '频道'
   },
 
   // Channel Stats
@@ -319,6 +327,7 @@ export const zh = {
     channelPlaceholder: '按频道ID筛选...',
     notAvailable: '无',
     milliseconds: '{value}毫秒',
+    add: '添加',
     // Relative time
     secondsAgo: '{value}秒前',
     minutesAgo: '{value}分钟前',
