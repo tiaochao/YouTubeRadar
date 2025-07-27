@@ -135,12 +135,23 @@ export default function HomePage() {
         setChannelInput("")
       } else {
         setMessage({ type: 'error', text: '未找到频道' })
-        setTimeout(() => setMessage(null), 3000)
+        setTimeout(() => setMessage(null), 5000)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add channel:', error)
-      setMessage({ type: 'error', text: '添加频道失败' })
-      setTimeout(() => setMessage(null), 3000)
+      const errorMessage = error.message || '添加频道失败'
+      
+      // 解析常见的 API 错误
+      if (errorMessage.includes('API key not valid')) {
+        setMessage({ type: 'error', text: 'API 密钥无效，请检查设置中的 API 密钥' })
+      } else if (errorMessage.includes('quotaExceeded')) {
+        setMessage({ type: 'error', text: 'API 配额已超限，请明天再试' })
+      } else if (errorMessage.includes('forbidden')) {
+        setMessage({ type: 'error', text: 'API 访问被拒绝，请检查 API 密钥权限' })
+      } else {
+        setMessage({ type: 'error', text: `添加失败: ${errorMessage}` })
+      }
+      setTimeout(() => setMessage(null), 8000)
     } finally {
       setIsSearching(false)
     }

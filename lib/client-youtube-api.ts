@@ -48,8 +48,15 @@ export class ClientYouTubeAPI {
   async searchChannel(query: string): Promise<YouTubeChannel | null> {
     try {
       const searchUrl = `${API_BASE}/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${this.apiKey}`
+      console.log('搜索频道 URL:', searchUrl)
       const searchRes = await fetch(searchUrl)
       const searchData = await searchRes.json()
+      console.log('搜索响应:', searchData)
+      
+      if (searchData.error) {
+        console.error('API 错误:', searchData.error)
+        throw new Error(searchData.error.message || 'API 请求失败')
+      }
       
       if (!searchData.items || searchData.items.length === 0) {
         return null
@@ -59,7 +66,7 @@ export class ClientYouTubeAPI {
       return this.getChannelById(channelId)
     } catch (error) {
       console.error('搜索频道失败:', error)
-      return null
+      throw error
     }
   }
 
@@ -72,8 +79,15 @@ export class ClientYouTubeAPI {
         : `id=${channelId}`
         
       const url = `${API_BASE}/channels?part=snippet,statistics&${params}&key=${this.apiKey}`
+      console.log('获取频道 URL:', url)
       const res = await fetch(url)
       const data = await res.json()
+      console.log('频道响应:', data)
+      
+      if (data.error) {
+        console.error('API 错误:', data.error)
+        throw new Error(data.error.message || 'API 请求失败')
+      }
       
       if (!data.items || data.items.length === 0) {
         return null
@@ -82,7 +96,7 @@ export class ClientYouTubeAPI {
       return data.items[0]
     } catch (error) {
       console.error('获取频道失败:', error)
-      return null
+      throw error
     }
   }
 
