@@ -198,13 +198,13 @@ export default function HomePage() {
             <Button className="justify-start hover:bg-blue-50 border-blue-200" variant="outline" asChild>
               <Link href="/public-analytics">
                 <BarChart3 className="mr-2 h-4 w-4 text-blue-600" />
-                {t('dashboard.viewChannels', '公共分析工具')}
+                {t('dashboard.viewAnalytics', '公共分析工具')}
               </Link>
             </Button>
             <Button className="justify-start hover:bg-green-50 border-green-200" variant="outline" asChild>
-              <Link href="/settings">
+              <Link href="/daily-activity">
                 <Activity className="mr-2 h-4 w-4 text-green-600" />
-                {t('dashboard.viewDailyActivity', '系统设置')}
+                {t('dashboard.viewDailyActivity', '每日活动')}
               </Link>
             </Button>
           </CardContent>
