@@ -17,7 +17,7 @@ vercel link
 # 4. 添加数据库环境变量
 vercel env add DATABASE_URL production
 # 当提示输入值时，粘贴以下内容：
-# postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
+# postgresql://postgres:54DG979491%21@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
 
 # 5. 触发重新部署
 vercel --prod
@@ -33,7 +33,7 @@ vercel --prod
 
 | Key | Value | Environment |
 |-----|-------|-------------|
-| DATABASE_URL | `postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres` | Production |
+| DATABASE_URL | `postgresql://postgres:54DG979491%21@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres` | Production |
 
 6. 点击 **Save**
 7. 重新部署会自动触发
@@ -50,7 +50,7 @@ echo "正在配置 Vercel 数据库环境变量..."
 
 # 设置数据库 URL
 vercel env add DATABASE_URL production << EOF
-postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
+postgresql://postgres:54DG979491%21@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
 EOF
 
 echo "环境变量已添加，正在重新部署..."
@@ -107,4 +107,4 @@ chmod +x setup-vercel-db.sh
 - **项目 ID**: ufcszgnfhiurfzrknofr
 - **数据库名**: postgres
 - **用户**: postgres
-- **密码**: 54DG979491!
+- **密码**: 54DG979491! (URL编码后: 54DG979491%21)
