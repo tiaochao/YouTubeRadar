@@ -52,18 +52,7 @@ export default function DailyActivityPage() {
       if (data.ok && data.data && data.data.length > 0) {
         setActivities(data.data)
       } else {
-        // 如果没有真实数据，尝试获取模拟数据演示
-        try {
-          const mockResponse = await fetch(`/api/daily-activity-mock?days=${days}`)
-          const mockData = await mockResponse.json()
-          if (mockData.ok && mockData.data && mockData.data.length > 0) {
-            setActivities(mockData.data)
-          } else {
-            setActivities([])
-          }
-        } catch {
-          setActivities([])
-        }
+        setActivities([])
       }
     } catch (err: any) {
       // 如果出错，显示本地存储版本

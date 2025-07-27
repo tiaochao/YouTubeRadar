@@ -19,7 +19,10 @@ import {
   ExternalLink,
   Video,
   Search,
-  PlayCircle
+  PlayCircle,
+  Edit3,
+  Check,
+  X
 } from "lucide-react"
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/use-i18n"
@@ -47,6 +50,8 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [sortBy, setSortBy] = useState<'name' | 'subscribers' | 'views' | 'videos' | 'recent'>('recent')
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [noteInput, setNoteInput] = useState("")
   
   const adapter = new LocalStorageAdapter()
 
@@ -146,6 +151,26 @@ export default function HomePage() {
       adapter.deleteChannel(channelId)
       loadChannels()
     }
+  }
+
+  const handleEditNote = (channelId: string, currentNote?: string) => {
+    setEditingNoteId(channelId)
+    setNoteInput(currentNote || "")
+  }
+
+  const handleSaveNote = (channelId: string) => {
+    const channel = channels.find(ch => ch.id === channelId)
+    if (channel) {
+      adapter.updateChannel(channelId, { ...channel, note: noteInput })
+      loadChannels()
+      setEditingNoteId(null)
+      setNoteInput("")
+    }
+  }
+
+  const handleCancelNote = () => {
+    setEditingNoteId(null)
+    setNoteInput("")
   }
 
   const handleSyncAll = async () => {
@@ -389,7 +414,7 @@ export default function HomePage() {
             <div className="space-y-3">
               {filteredChannels.map((channel) => (
                 <div key={channel.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     {channel.thumbnailUrl && (
                       <img
                         src={channel.thumbnailUrl}
@@ -397,9 +422,40 @@ export default function HomePage() {
                         className="w-12 h-12 rounded-full"
                       />
                     )}
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium">{channel.title}</p>
                       <p className="text-sm text-muted-foreground">{channel.handle}</p>
+                      {editingNoteId === channel.id ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Input
+                            value={noteInput}
+                            onChange={(e) => setNoteInput(e.target.value)}
+                            placeholder="添加备注..."
+                            className="h-7 text-sm"
+                            onKeyPress={(e) => e.key === 'Enter' && handleSaveNote(channel.id)}
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={() => handleSaveNote(channel.id)}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={handleCancelNote}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        channel.note && (
+                          <p className="text-sm text-muted-foreground mt-1">{channel.note}</p>
+                        )
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -418,11 +474,20 @@ export default function HomePage() {
                       </span>
                     </div>
                     <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditNote(channel.id, channel.note)}
+                        title="编辑备注"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" asChild>
                         <a 
                           href={`https://youtube.com/${channel.handle}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="在YouTube查看"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -431,6 +496,7 @@ export default function HomePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteChannel(channel.id)}
+                        title="删除频道"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

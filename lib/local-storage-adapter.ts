@@ -8,6 +8,7 @@ interface Channel {
   viewCount?: number
   subscriberCount?: number
   videoCount?: number
+  note?: string
   createdAt: Date
   updatedAt: Date
 }
