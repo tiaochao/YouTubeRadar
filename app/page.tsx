@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -54,10 +54,31 @@ export default function HomePage() {
   const [noteInput, setNoteInput] = useState("")
   
   const adapter = new LocalStorageAdapter()
+  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     loadChannels()
   }, [])
+
+  // 清理定时器防止内存泄漏
+  useEffect(() => {
+    return () => {
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // 设置消息并自动清除
+  const setMessageWithTimeout = (msg: { type: 'success' | 'error', text: string }, timeout: number = 5000) => {
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current)
+    }
+    setMessage(msg)
+    messageTimeoutRef.current = setTimeout(() => {
+      setMessage(null)
+    }, timeout)
+  }
 
   const loadChannels = () => {
     try {
@@ -134,8 +155,7 @@ export default function HomePage() {
         setIsAddDialogOpen(false)
         setChannelInput("")
       } else {
-        setMessage({ type: 'error', text: '未找到频道' })
-        setTimeout(() => setMessage(null), 5000)
+        setMessageWithTimeout({ type: 'error', text: '未找到频道' })
       }
     } catch (error: any) {
       console.error('Failed to add channel:', error)
@@ -143,15 +163,14 @@ export default function HomePage() {
       
       // 解析常见的 API 错误
       if (errorMessage.includes('API key not valid')) {
-        setMessage({ type: 'error', text: 'API 密钥无效，请检查设置中的 API 密钥' })
+        setMessageWithTimeout({ type: 'error', text: 'API 密钥无效，请检查设置中的 API 密钥' }, 8000)
       } else if (errorMessage.includes('quotaExceeded')) {
-        setMessage({ type: 'error', text: 'API 配额已超限，请明天再试' })
+        setMessageWithTimeout({ type: 'error', text: 'API 配额已超限，请明天再试' }, 8000)
       } else if (errorMessage.includes('forbidden')) {
-        setMessage({ type: 'error', text: 'API 访问被拒绝，请检查 API 密钥权限' })
+        setMessageWithTimeout({ type: 'error', text: 'API 访问被拒绝，请检查 API 密钥权限' }, 8000)
       } else {
-        setMessage({ type: 'error', text: `添加失败: ${errorMessage}` })
+        setMessageWithTimeout({ type: 'error', text: `添加失败: ${errorMessage}` }, 8000)
       }
-      setTimeout(() => setMessage(null), 8000)
     } finally {
       setIsSearching(false)
     }
@@ -226,16 +245,14 @@ export default function HomePage() {
       const data = await response.json()
       
       loadChannels()
-      setMessage({ 
+      setMessageWithTimeout({ 
         type: 'success', 
         text: `同步完成：更新 ${successCount} 个频道，失败 ${failCount} 个` 
       })
-      setTimeout(() => setMessage(null), 5000)
       
     } catch (error) {
       console.error('Sync failed:', error)
-      setMessage({ type: 'error', text: '同步失败' })
-      setTimeout(() => setMessage(null), 5000)
+      setMessageWithTimeout({ type: 'error', text: '同步失败' })
     } finally {
       setIsSyncing(false)
     }

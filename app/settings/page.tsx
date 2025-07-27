@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -16,11 +16,20 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [apiKey, setApiKey] = useState('')
+  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // 加载保存的API密钥
     const savedApiKey = localStorage.getItem('youtube_api_key') || ''
     setApiKey(savedApiKey)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current)
+      }
+    }
   }, [])
 
   // 保存设置
@@ -39,6 +48,10 @@ export default function SettingsPage() {
     setTimeout(() => {
       setSaving(false)
       setMessage({ type: 'success', text: t('settings.saved') })
+      // 自动清除消息
+      messageTimeoutRef.current = setTimeout(() => {
+        setMessage(null)
+      }, 3000)
     }, 500)
   }
 
