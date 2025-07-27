@@ -11,7 +11,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "YouTube Radar",
   description: "Monitor your YouTube channels activity and performance in real-time.",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 export default function RootLayout({

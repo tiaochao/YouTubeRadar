@@ -55,10 +55,26 @@ export default function HomePage() {
   
   const adapter = new LocalStorageAdapter()
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [useDatabase, setUseDatabase] = useState(false)
 
   useEffect(() => {
-    loadChannels()
-  }, [])
+    // 检查数据库可用性
+    const checkDatabase = async () => {
+      try {
+        const response = await fetch('/api/db-status')
+        const status = await response.json()
+        if (status.database?.connected) {
+          setUseDatabase(true)
+        }
+      } catch (error) {
+        console.log('Database not available, using local storage')
+      }
+    }
+    
+    checkDatabase().then(() => {
+      loadChannels()
+    })
+  }, [loadChannels])
 
   // 清理定时器防止内存泄漏
   useEffect(() => {
@@ -80,16 +96,38 @@ export default function HomePage() {
     }, timeout)
   }
 
-  const loadChannels = useCallback(() => {
+  const loadChannels = useCallback(async () => {
     try {
-      const storedChannels = adapter.getChannels()
-      setChannels(storedChannels)
+      if (useDatabase) {
+        // 尝试从数据库加载
+        const response = await fetch('/api/channels-db')
+        const data = await response.json()
+        if (data.ok) {
+          setChannels(data.data || [])
+        } else {
+          // 数据库失败，回退到本地存储
+          const storedChannels = adapter.getChannels()
+          setChannels(storedChannels)
+        }
+      } else {
+        // 使用本地存储
+        const storedChannels = adapter.getChannels()
+        setChannels(storedChannels)
+      }
     } catch (error) {
       console.error('Failed to load channels:', error)
+      // 出错时回退到本地存储
+      try {
+        const storedChannels = adapter.getChannels()
+        setChannels(storedChannels)
+      } catch (localError) {
+        console.error('Local storage also failed:', localError)
+        setChannels([])
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [useDatabase])
 
   const stats = useMemo(() => {
     const totalViews = channels.reduce((sum, ch) => sum + (ch.viewCount || 0), 0)
@@ -199,6 +237,32 @@ export default function HomePage() {
   const handleCancelNote = useCallback(() => {
     setEditingNoteId(null)
     setNoteInput("")
+  }, [])
+
+  const handleGenerateDailyStats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/generate-daily-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      
+      const data = await response.json()
+      if (data.ok) {
+        setMessageWithTimeout({ 
+          type: 'success', 
+          text: `已生成 ${data.data.statsCount} 个频道的每日统计数据` 
+        })
+      } else {
+        setMessageWithTimeout({ 
+          type: 'error', 
+          text: data.error || '生成每日统计失败' 
+        })
+      }
+    } catch (error) {
+      console.error('Failed to generate daily stats:', error)
+      setMessageWithTimeout({ type: 'error', text: '生成每日统计失败' })
+    }
   }, [])
 
   const handleSyncAll = async () => {
@@ -313,6 +377,16 @@ export default function HomePage() {
               </>
             )}
           </Button>
+          {useDatabase && (
+            <Button 
+              onClick={handleGenerateDailyStats}
+              variant="outline"
+              disabled={channels.length === 0}
+            >
+              <Activity className="mr-2 h-4 w-4" />
+              生成每日统计
+            </Button>
+          )}
           <Button variant="outline" size="sm" asChild>
             <Link href="/settings">
               <Settings className="mr-2 h-4 w-4" />
