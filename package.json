@@ -66,6 +66,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@types/ioredis": "^4.28.10",
     "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.15.4",
     "@upstash/redis": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
@@ -73,6 +74,7 @@
     "cmdk": "1.0.4",
     "crypto": "latest",
     "date-fns": "latest",
+    "dotenv": "^17.2.1",
     "embla-carousel-react": "8.5.1",
     "express": "^4.21.2",
     "googleapis": "latest",
@@ -82,6 +84,8 @@
     "next": "15.2.4",
     "next-themes": "^0.4.4",
     "node-cron": "^4.2.1",
+    "pg": "^8.16.3",
+    "postcss": "^8.5",
     "prisma": "latest",
     "react": "^19",
     "react-day-picker": "latest",
@@ -92,11 +96,10 @@
     "recharts": "latest",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
+    "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1",
-    "tailwindcss": "^3.4.17",
-    "postcss": "^8.5"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.11.6",
