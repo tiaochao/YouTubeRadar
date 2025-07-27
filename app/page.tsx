@@ -399,17 +399,10 @@ export default function HomePage() {
             variant="outline"
             disabled={isSyncing || channels.length === 0}
           >
-            {isSyncing ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                同步中...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                一键同步
-              </>
-            )}
+            <span className="flex items-center">
+              <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? '同步中...' : '一键同步'}
+            </span>
           </Button>
           <Button 
             onClick={handleGenerateDailyStats}
@@ -689,9 +682,15 @@ export default function HomePage() {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               取消
             </Button>
-            <Button onClick={handleAddChannel} disabled={isSearching || !channelInput.trim()}>
-              {isSearching && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-              添加
+            <Button 
+              onClick={handleAddChannel} 
+              disabled={isSearching || !channelInput.trim()}
+              className="min-w-[100px]"
+            >
+              <span className="flex items-center">
+                {isSearching && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                {isSearching ? '搜索中...' : '添加'}
+              </span>
             </Button>
           </DialogFooter>
         </DialogContent>
