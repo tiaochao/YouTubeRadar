@@ -17,7 +17,8 @@ import {
   RefreshCw,
   ExternalLink,
   Video,
-  Search
+  Search,
+  PlayCircle
 } from "lucide-react"
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/use-i18n"
