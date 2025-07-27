@@ -46,7 +46,6 @@ export default function HomePage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
   const adapter = new LocalStorageAdapter()
-  const youtubeAPI = new ClientYouTubeAPI()
 
   useEffect(() => {
     loadChannels()
@@ -92,6 +91,8 @@ export default function HomePage() {
     
     setIsSearching(true)
     try {
+      // 每次创建新实例以获取最新的 API 密钥
+      const youtubeAPI = new ClientYouTubeAPI()
       let channel = null
       
       if (channelInput.startsWith('@')) {
@@ -149,6 +150,9 @@ export default function HomePage() {
     setMessage(null)
     
     try {
+      // 每次创建新实例以获取最新的 API 密钥
+      const youtubeAPI = new ClientYouTubeAPI()
+      
       // 同步所有频道的最新数据
       let successCount = 0
       let failCount = 0

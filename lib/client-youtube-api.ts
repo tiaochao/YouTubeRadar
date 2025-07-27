@@ -37,7 +37,11 @@ export class ClientYouTubeAPI {
   private apiKey: string
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || ''
+    // 优先级：参数 > localStorage > 环境变量
+    this.apiKey = apiKey || 
+                  (typeof window !== 'undefined' ? localStorage.getItem('youtube_api_key') : null) || 
+                  process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 
+                  ''
   }
 
   // 搜索频道

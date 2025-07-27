@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Save } from "lucide-react"
+import { Settings, Save, Key } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useI18n } from "@/lib/i18n/use-i18n"
@@ -14,17 +15,31 @@ export default function SettingsPage() {
   const { t } = useI18n()
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [apiKey, setApiKey] = useState('')
+
+  useEffect(() => {
+    // 加载保存的API密钥
+    const savedApiKey = localStorage.getItem('youtube_api_key') || ''
+    setApiKey(savedApiKey)
+  }, [])
 
   // 保存设置
   const handleSave = () => {
     setSaving(true)
     setMessage(null)
     
+    // 保存API密钥到本地存储
+    if (apiKey) {
+      localStorage.setItem('youtube_api_key', apiKey)
+    } else {
+      localStorage.removeItem('youtube_api_key')
+    }
+    
     // 模拟保存
     setTimeout(() => {
       setSaving(false)
       setMessage({ type: 'success', text: t('settings.saved') })
-    }, 1000)
+    }, 500)
   }
 
   return (
@@ -48,8 +63,9 @@ export default function SettingsPage() {
       )}
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">{t('settings.general')}</TabsTrigger>
+          <TabsTrigger value="api">{t('settings.api')}</TabsTrigger>
           <TabsTrigger value="about">{t('settings.about')}</TabsTrigger>
         </TabsList>
 
@@ -88,6 +104,48 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                {t('settings.apiSettings')}
+              </CardTitle>
+              <CardDescription>
+                {t('settings.apiSettingsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="apiKey">YouTube Data API v3 密钥</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  placeholder="输入您的 API 密钥"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  在 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Cloud Console</a> 获取 API 密钥
+                </p>
+              </div>
+              
+              <Alert>
+                <AlertDescription>
+                  <p className="font-medium mb-2">如何获取 API 密钥：</p>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>访问 Google Cloud Console</li>
+                    <li>创建新项目或选择现有项目</li>
+                    <li>启用 YouTube Data API v3</li>
+                    <li>创建凭据 → API 密钥</li>
+                    <li>复制密钥并粘贴到上方输入框</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
