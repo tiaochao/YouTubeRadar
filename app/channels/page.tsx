@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Plus, 
   Search, 
@@ -37,6 +38,8 @@ export default function ChannelsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [channelInput, setChannelInput] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
   const adapter = new LocalStorageAdapter()
   const youtubeAPI = new ClientYouTubeAPI()
@@ -134,6 +137,32 @@ export default function ChannelsPage() {
     }
   }
 
+  const handleSyncToDatabase = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/sync/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channels })
+      })
+      
+      const data = await response.json()
+      if (data.ok) {
+        setMessage({ type: 'success', text: data.message || '同步完成' })
+        setTimeout(() => setMessage(null), 5000)
+      } else {
+        setMessage({ type: 'error', text: data.error || '同步失败' })
+        setTimeout(() => setMessage(null), 5000)
+      }
+    } catch (error) {
+      console.error('Sync failed:', error)
+      setMessage({ type: 'error', text: '同步失败' })
+      setTimeout(() => setMessage(null), 5000)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   const formatNumber = (num: number | undefined): string => {
     if (!num) return '0'
     if (num >= 1000000) {
@@ -173,11 +202,38 @@ export default function ChannelsPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('channels.title', '频道管理')}</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('channels.addChannel', '添加频道')}
-        </Button>
+        <div className="flex gap-2">
+          {channels.length > 0 && (
+            <Button 
+              onClick={handleSyncToDatabase}
+              variant="outline"
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  同步中...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  同步到数据库
+                </>
+              )}
+            </Button>
+          )}
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('channels.addChannel', '添加频道')}
+          </Button>
+        </div>
       </div>
+
+      {message && (
+        <Alert className={message.type === 'error' ? 'border-red-500' : 'border-green-500'}>
+          <AlertDescription>{message.text}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex gap-4">
         <div className="relative flex-1">
