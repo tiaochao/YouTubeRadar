@@ -45,17 +45,6 @@ export default function DailyActivityPage() {
     setError(null)
     
     try {
-      // 先检查数据库状态
-      const dbStatusResponse = await fetch('/api/db-status')
-      const dbStatus = await dbStatusResponse.json()
-      
-      if (!dbStatus.database?.connected) {
-        // 数据库未连接，显示本地存储提示
-        setActivities([])
-        setLoading(false)
-        return
-      }
-      
       // 尝试从 API 获取数据
       const response = await fetch(`/api/daily-activity?days=${days}`)
       const data = await response.json()
@@ -63,11 +52,11 @@ export default function DailyActivityPage() {
       if (data.ok && data.data && data.data.length > 0) {
         setActivities(data.data)
       } else {
-        // 如果没有数据，尝试获取模拟数据演示
+        // 如果没有真实数据，尝试获取模拟数据演示
         try {
           const mockResponse = await fetch(`/api/daily-activity-mock?days=${days}`)
           const mockData = await mockResponse.json()
-          if (mockData.ok) {
+          if (mockData.ok && mockData.data && mockData.data.length > 0) {
             setActivities(mockData.data)
           } else {
             setActivities([])

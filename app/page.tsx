@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Users, 
   Eye, 
@@ -45,6 +46,7 @@ export default function HomePage() {
   const [channelInput, setChannelInput] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [sortBy, setSortBy] = useState<'name' | 'subscribers' | 'views' | 'videos' | 'recent'>('recent')
   
   const adapter = new LocalStorageAdapter()
 
@@ -203,10 +205,26 @@ export default function HomePage() {
     }
   }
 
-  const filteredChannels = channels.filter(channel =>
-    channel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    channel.handle.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredChannels = channels
+    .filter(channel =>
+      channel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      channel.handle.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.title.localeCompare(b.title)
+        case 'subscribers':
+          return (b.subscriberCount || 0) - (a.subscriberCount || 0)
+        case 'views':
+          return (b.viewCount || 0) - (a.viewCount || 0)
+        case 'videos':
+          return (b.videoCount || 0) - (a.videoCount || 0)
+        case 'recent':
+        default:
+          return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
+      }
+    })
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -333,9 +351,9 @@ export default function HomePage() {
           </Button>
         </CardHeader>
         <CardContent>
-          {/* 搜索框 */}
-          <div className="mb-4">
-            <div className="relative">
+          {/* 搜索和排序 */}
+          <div className="mb-4 flex gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="搜索频道..."
@@ -344,6 +362,18 @@ export default function HomePage() {
                 className="pl-10"
               />
             </div>
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="排序方式" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">最近更新</SelectItem>
+                <SelectItem value="name">按名称</SelectItem>
+                <SelectItem value="subscribers">按订阅者</SelectItem>
+                <SelectItem value="views">按观看数</SelectItem>
+                <SelectItem value="videos">按视频数</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* 频道列表 */}
