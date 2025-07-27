@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -71,10 +71,13 @@ export default function HomePage() {
       }
     }
     
-    checkDatabase().then(() => {
-      loadChannels()
-    })
-  }, [loadChannels])
+    checkDatabase()
+  }, [])
+
+  // 单独的 effect 用于加载频道
+  useEffect(() => {
+    loadChannels()
+  }, [useDatabase])
 
   // 清理定时器防止内存泄漏
   useEffect(() => {
@@ -96,7 +99,8 @@ export default function HomePage() {
     }, timeout)
   }
 
-  const loadChannels = useCallback(async () => {
+  const loadChannels = async () => {
+    setLoading(true)
     try {
       if (useDatabase) {
         // 尝试从数据库加载
@@ -104,19 +108,16 @@ export default function HomePage() {
         const data = await response.json()
         if (data.ok) {
           setChannels(data.data || [])
-        } else {
-          // 数据库失败，回退到本地存储
-          const storedChannels = adapter.getChannels()
-          setChannels(storedChannels)
+          return
         }
-      } else {
-        // 使用本地存储
-        const storedChannels = adapter.getChannels()
-        setChannels(storedChannels)
       }
+      
+      // 使用本地存储（数据库不可用或失败时）
+      const storedChannels = adapter.getChannels()
+      setChannels(storedChannels)
     } catch (error) {
       console.error('Failed to load channels:', error)
-      // 出错时回退到本地存储
+      // 出错时使用本地存储
       try {
         const storedChannels = adapter.getChannels()
         setChannels(storedChannels)
@@ -127,7 +128,7 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }, [useDatabase])
+  }
 
   const stats = useMemo(() => {
     const totalViews = channels.reduce((sum, ch) => sum + (ch.viewCount || 0), 0)
@@ -142,14 +143,14 @@ export default function HomePage() {
     }
   }, [channels])
 
-  const formatNumber = useCallback((num: number): string => {
+  const formatNumber = (num: number): string => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M'
     } else if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K'
     }
     return num.toString()
-  }, [])
+  }
 
   const handleAddChannel = async () => {
     if (!channelInput.trim()) return
@@ -212,19 +213,19 @@ export default function HomePage() {
     }
   }
 
-  const handleDeleteChannel = useCallback((channelId: string) => {
+  const handleDeleteChannel = (channelId: string) => {
     if (confirm('确定要删除这个频道吗？')) {
       adapter.deleteChannel(channelId)
       loadChannels()
     }
-  }, [loadChannels])
+  }
 
-  const handleEditNote = useCallback((channelId: string, currentNote?: string) => {
+  const handleEditNote = (channelId: string, currentNote?: string) => {
     setEditingNoteId(channelId)
     setNoteInput(currentNote || "")
-  }, [])
+  }
 
-  const handleSaveNote = useCallback((channelId: string) => {
+  const handleSaveNote = (channelId: string) => {
     const channel = channels.find(ch => ch.id === channelId)
     if (channel) {
       adapter.updateChannel(channelId, { ...channel, note: noteInput })
@@ -232,14 +233,14 @@ export default function HomePage() {
       setEditingNoteId(null)
       setNoteInput("")
     }
-  }, [channels, noteInput, loadChannels])
+  }
 
-  const handleCancelNote = useCallback(() => {
+  const handleCancelNote = () => {
     setEditingNoteId(null)
     setNoteInput("")
-  }, [])
+  }
 
-  const handleGenerateDailyStats = useCallback(async () => {
+  const handleGenerateDailyStats = async () => {
     try {
       const response = await fetch('/api/generate-daily-stats', {
         method: 'POST',
@@ -263,7 +264,7 @@ export default function HomePage() {
       console.error('Failed to generate daily stats:', error)
       setMessageWithTimeout({ type: 'error', text: '生成每日统计失败' })
     }
-  }, [])
+  }
 
   const handleSyncAll = async () => {
     setIsSyncing(true)

@@ -13,7 +13,9 @@ export const metadata: Metadata = {
   description: "Monitor your YouTube channels activity and performance in real-time.",
   generator: 'v0.dev',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' }
+    ]
   }
 }
 
