@@ -1,9 +1,8 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install --legacy-peer-deps --production=false",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_YOUTUBE_API_KEY": "AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4",
-    "NEXT_PUBLIC_USE_LOCAL_STORAGE": "true"
+    "NEXT_PUBLIC_YOUTUBE_API_KEY": "AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4"
   }
 }

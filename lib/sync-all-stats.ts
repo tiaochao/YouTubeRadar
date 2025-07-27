@@ -1,4 +1,4 @@
-import { prisma } from './db'
+import { db as prisma } from './db'
 
 export async function syncAllStats(): Promise<{ synced: number; failed: number }> {
   const channels = await prisma.channel.findMany({

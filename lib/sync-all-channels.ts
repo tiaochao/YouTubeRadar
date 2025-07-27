@@ -1,4 +1,4 @@
-import { prisma } from './db'
+import { db as prisma } from './db'
 import { syncChannelData } from './youtube-channel-stats'
 
 export async function syncAllChannels(): Promise<{ synced: number; failed: number }> {
