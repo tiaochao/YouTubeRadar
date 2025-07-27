@@ -27,7 +27,6 @@ import {
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo } from "@/components/ui/logo"
-import { LocalStorageAdapter } from "@/lib/local-storage-adapter"
 import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
 import {
   Dialog,
@@ -53,31 +52,12 @@ export default function HomePage() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [noteInput, setNoteInput] = useState("")
   
-  const adapter = new LocalStorageAdapter()
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const [useDatabase, setUseDatabase] = useState(false)
 
-  useEffect(() => {
-    // 检查数据库可用性
-    const checkDatabase = async () => {
-      try {
-        const response = await fetch('/api/db-status')
-        const status = await response.json()
-        if (status.database?.connected) {
-          setUseDatabase(true)
-        }
-      } catch (error) {
-        console.log('Database not available, using local storage')
-      }
-    }
-    
-    checkDatabase()
-  }, [])
-
-  // 单独的 effect 用于加载频道
+  // 加载频道数据
   useEffect(() => {
     loadChannels()
-  }, [useDatabase])
+  }, [])
 
   // 清理定时器防止内存泄漏
   useEffect(() => {
@@ -102,29 +82,17 @@ export default function HomePage() {
   const loadChannels = async () => {
     setLoading(true)
     try {
-      if (useDatabase) {
-        // 尝试从数据库加载
-        const response = await fetch('/api/channels-db')
-        const data = await response.json()
-        if (data.ok) {
-          setChannels(data.data || [])
-          return
-        }
-      }
-      
-      // 使用本地存储（数据库不可用或失败时）
-      const storedChannels = adapter.getChannels()
-      setChannels(storedChannels)
-    } catch (error) {
-      console.error('Failed to load channels:', error)
-      // 出错时使用本地存储
-      try {
-        const storedChannels = adapter.getChannels()
-        setChannels(storedChannels)
-      } catch (localError) {
-        console.error('Local storage also failed:', localError)
+      const response = await fetch('/api/channels-db')
+      const data = await response.json()
+      if (data.ok) {
+        setChannels(data.data || [])
+      } else {
+        console.error('Failed to load channels:', data.error)
         setChannels([])
       }
+    } catch (error) {
+      console.error('Failed to load channels:', error)
+      setChannels([])
     } finally {
       setLoading(false)
     }
@@ -187,8 +155,22 @@ export default function HomePage() {
           updatedAt: new Date()
         }
         
-        adapter.addChannel(newChannel)
-        loadChannels()
+        // 添加到数据库
+        const addResponse = await fetch('/api/channels-db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'add',
+            channelData: newChannel
+          })
+        })
+        
+        const addData = await addResponse.json()
+        if (addData.ok) {
+          loadChannels()
+        } else {
+          throw new Error(addData.error || '添加频道失败')
+        }
         setIsAddDialogOpen(false)
         setChannelInput("")
       } else {
@@ -213,10 +195,28 @@ export default function HomePage() {
     }
   }
 
-  const handleDeleteChannel = (channelId: string) => {
+  const handleDeleteChannel = async (channelId: string) => {
     if (confirm('确定要删除这个频道吗？')) {
-      adapter.deleteChannel(channelId)
-      loadChannels()
+      try {
+        const response = await fetch('/api/channels-db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete',
+            channelId
+          })
+        })
+        
+        const data = await response.json()
+        if (data.ok) {
+          loadChannels()
+        } else {
+          setMessageWithTimeout({ type: 'error', text: '删除频道失败' })
+        }
+      } catch (error) {
+        console.error('Failed to delete channel:', error)
+        setMessageWithTimeout({ type: 'error', text: '删除频道失败' })
+      }
     }
   }
 
@@ -225,13 +225,32 @@ export default function HomePage() {
     setNoteInput(currentNote || "")
   }
 
-  const handleSaveNote = (channelId: string) => {
+  const handleSaveNote = async (channelId: string) => {
     const channel = channels.find(ch => ch.id === channelId)
     if (channel) {
-      adapter.updateChannel(channelId, { ...channel, note: noteInput })
-      loadChannels()
-      setEditingNoteId(null)
-      setNoteInput("")
+      try {
+        const response = await fetch('/api/channels-db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            channelId,
+            channelData: { note: noteInput }
+          })
+        })
+        
+        const data = await response.json()
+        if (data.ok) {
+          loadChannels()
+          setEditingNoteId(null)
+          setNoteInput("")
+        } else {
+          setMessageWithTimeout({ type: 'error', text: '保存备注失败' })
+        }
+      } catch (error) {
+        console.error('Failed to save note:', error)
+        setMessageWithTimeout({ type: 'error', text: '保存备注失败' })
+      }
     }
   }
 
@@ -289,8 +308,27 @@ export default function HomePage() {
               videoCount: parseInt(updatedChannel.statistics.videoCount) || 0,
               updatedAt: new Date()
             }
-            adapter.updateChannel(channel.id, updated)
-            successCount++
+            // 更新到数据库
+            const updateResponse = await fetch('/api/channels-db', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'update',
+                channelId: channel.id,
+                channelData: {
+                  viewCount: updated.viewCount,
+                  subscriberCount: updated.subscriberCount,
+                  videoCount: updated.videoCount
+                }
+              })
+            })
+            
+            const updateData = await updateResponse.json()
+            if (updateData.ok) {
+              successCount++
+            } else {
+              failCount++
+            }
           }
         } catch (error) {
           console.error(`Failed to sync channel ${channel.id}:`, error)
@@ -298,14 +336,8 @@ export default function HomePage() {
         }
       }
       
-      // 同步到数据库
-      const response = await fetch('/api/sync/manual', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channels: adapter.getChannels() })
-      })
-      
-      const data = await response.json()
+      // 加载最新数据
+      await loadChannels()
       
       loadChannels()
       setMessageWithTimeout({ 
@@ -378,16 +410,14 @@ export default function HomePage() {
               </>
             )}
           </Button>
-          {useDatabase && (
-            <Button 
-              onClick={handleGenerateDailyStats}
-              variant="outline"
-              disabled={channels.length === 0}
-            >
-              <Activity className="mr-2 h-4 w-4" />
-              生成每日统计
-            </Button>
-          )}
+          <Button 
+            onClick={handleGenerateDailyStats}
+            variant="outline"
+            disabled={channels.length === 0}
+          >
+            <Activity className="mr-2 h-4 w-4" />
+            生成每日统计
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/settings">
               <Settings className="mr-2 h-4 w-4" />

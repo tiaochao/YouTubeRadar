@@ -142,12 +142,12 @@ export default function DailyActivityPage() {
           <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
             <Activity className="h-12 w-12 text-amber-500" />
             <div className="text-center space-y-2">
-              <p className="text-lg font-medium text-amber-800">{t('dailyActivity.localStorageLimit')}</p>
+              <p className="text-lg font-medium text-amber-800">暂无活动数据</p>
               <p className="text-muted-foreground max-w-md">
-                {t('dailyActivity.localStorageDescription')}
+                请先在首页点击"生成每日统计"按钮来生成频道的每日活动数据
               </p>
               <p className="text-sm text-amber-600">
-                {t('dailyActivity.configureDatabase')}
+                每日活动数据会记录频道的视频发布、观看量和订阅者变化
               </p>
             </div>
           </CardContent>
