@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { HomeIcon, BarChartIcon, VideoIcon, YoutubeIcon, SettingsIcon, TrendingUpIcon, Radar } from "lucide-react"
+import { HomeIcon, SettingsIcon, Radar } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo } from "@/components/ui/logo"
@@ -35,18 +35,6 @@ export function NavSidebar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                href="/videos"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <VideoIcon className="h-5 w-5" />
-                <span className="sr-only">{t('common.videos')}</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('common.videos')}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
                 href="/daily-activity"
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-red-50 md:h-8 md:w-8"
               >
@@ -55,18 +43,6 @@ export function NavSidebar() {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right">{t('navigation.dailyActivity')}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="/public-analytics"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <YoutubeIcon className="h-5 w-5" />
-                <span className="sr-only">{t('navigation.publicAnalytics')}</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('navigation.publicAnalytics')}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>

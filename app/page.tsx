@@ -10,8 +10,6 @@ import {
   Users, 
   Eye, 
   Settings,
-  BarChart3,
-  PlayCircle,
   Radar,
   Activity,
   Plus,
@@ -411,23 +409,11 @@ export default function HomePage() {
       </Card>
 
       {/* 快速链接 */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Button variant="outline" asChild className="h-auto py-4">
+      <div className="flex justify-center">
+        <Button variant="outline" asChild className="h-auto py-4 px-8">
           <Link href="/daily-activity" className="flex flex-col items-center gap-2">
             <Activity className="h-6 w-6 text-green-600" />
             <span>每日活动</span>
-          </Link>
-        </Button>
-        <Button variant="outline" asChild className="h-auto py-4">
-          <Link href="/public-analytics" className="flex flex-col items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-blue-600" />
-            <span>公共分析</span>
-          </Link>
-        </Button>
-        <Button variant="outline" asChild className="h-auto py-4">
-          <Link href="/videos" className="flex flex-col items-center gap-2">
-            <PlayCircle className="h-6 w-6 text-purple-600" />
-            <span>视频列表</span>
           </Link>
         </Button>
       </div>
