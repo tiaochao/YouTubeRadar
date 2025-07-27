@@ -37,11 +37,31 @@ export default function DailyActivityPage() {
   const [days, setDays] = useState(30)
 
   useEffect(() => {
-    // 对于本地存储版本，我们暂时显示无数据
-    // 因为本地存储不支持历史数据追踪
-    setLoading(false)
-    setActivities([])
+    fetchDailyActivity()
   }, [days])
+
+  const fetchDailyActivity = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // 尝试从 API 获取数据
+      const response = await fetch(`/api/daily-activity?days=${days}`)
+      const data = await response.json()
+      
+      if (data.ok) {
+        setActivities(data.data)
+      } else {
+        // 如果 API 失败，说明可能没有配置数据库
+        setActivities([])
+      }
+    } catch (err) {
+      // 如果出错，显示本地存储版本
+      setActivities([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)

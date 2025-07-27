@@ -1,11 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { HomeIcon, BarChartIcon, VideoIcon, YoutubeIcon, SettingsIcon, TrendingUpIcon, Radar, Languages } from "lucide-react"
+import { HomeIcon, BarChartIcon, VideoIcon, YoutubeIcon, SettingsIcon, TrendingUpIcon, Radar } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo } from "@/components/ui/logo"
-import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function NavSidebar() {
   const { t } = useI18n()
@@ -20,17 +19,6 @@ export function NavSidebar() {
           <Radar className="h-4 w-4 transition-all group-hover:rotate-45" />
           <span className="sr-only">YouTube Radar</span>
         </Link>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/50 transition-colors hover:bg-muted md:h-8 md:w-8">
-                <LanguageSwitcher />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('settings.language')}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
