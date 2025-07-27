@@ -2,8 +2,9 @@ import type { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { successResponse, errorResponse } from "@/lib/api-response"
 import { logger } from "@/lib/logger"
+import { withErrorHandler } from "@/lib/api-error-handler"
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const query = searchParams.get("query") || ""
@@ -72,6 +73,6 @@ export async function GET(req: NextRequest) {
     return successResponse(serializableChannels)
   } catch (error: any) {
     logger.error("API/Channels", "Failed to fetch channels.", error)
-    return errorResponse("Failed to fetch channels.", error.message, 500)
+    throw error // 让错误处理器处理
   }
-}
+})
