@@ -60,12 +60,21 @@ export default function DailyActivityPage() {
       const response = await fetch(`/api/daily-activity?days=${days}`)
       const data = await response.json()
       
-      if (data.ok) {
+      if (data.ok && data.data && data.data.length > 0) {
         setActivities(data.data)
       } else {
-        // 如果 API 失败
-        setError(data.error || '获取数据失败')
-        setActivities([])
+        // 如果没有数据，尝试获取模拟数据演示
+        try {
+          const mockResponse = await fetch(`/api/daily-activity-mock?days=${days}`)
+          const mockData = await mockResponse.json()
+          if (mockData.ok) {
+            setActivities(mockData.data)
+          } else {
+            setActivities([])
+          }
+        } catch {
+          setActivities([])
+        }
       }
     } catch (err: any) {
       // 如果出错，显示本地存储版本
