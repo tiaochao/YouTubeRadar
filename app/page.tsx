@@ -167,12 +167,13 @@ export default function HomePage() {
         
         const addData = await addResponse.json()
         if (addData.ok) {
-          loadChannels()
+          setIsAddDialogOpen(false)
+          setChannelInput("")
+          setMessageWithTimeout({ type: 'success', text: '频道添加成功' })
+          await loadChannels()
         } else {
           throw new Error(addData.error || '添加频道失败')
         }
-        setIsAddDialogOpen(false)
-        setChannelInput("")
       } else {
         setMessageWithTimeout({ type: 'error', text: '未找到频道' })
       }
@@ -675,7 +676,12 @@ export default function HomePage() {
                 placeholder="例如: @mkbhd 或 Marques Brownlee"
                 value={channelInput}
                 onChange={(e) => setChannelInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddChannel()}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !isSearching) {
+                    e.preventDefault()
+                    handleAddChannel()
+                  }
+                }}
               />
             </div>
           </div>

@@ -17,6 +17,8 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
+  // 禁用React严格模式以避免DOM操作问题
+  reactStrictMode: false,
 }
 
 export default nextConfig
