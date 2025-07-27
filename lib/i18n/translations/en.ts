@@ -55,7 +55,10 @@ export const en = {
     subscribersGained: 'Subscribers Gained',
     activeChannels: 'Active Channels',
     totalViews: 'Total Views',
-    noActivity: 'No channel activity data available for this time range'
+    noActivity: 'No channel activity data available for this time range',
+    localStorageLimit: 'Local Storage Limitation',
+    localStorageDescription: 'Currently using local storage, which cannot track historical activity data. To view daily activity statistics, please connect to Supabase or another database.',
+    configureDatabase: 'Tip: You can configure database connection in the settings page'
   },
 
   // Channels Page
@@ -135,6 +138,7 @@ export const en = {
 
   // Error Messages
   errors: {
+    error: 'Error',
     loadingChannels: 'Error Loading Channels',
     unexpectedError: 'An unexpected error occurred.',
     failedToDelete: 'Failed to delete channel',
@@ -149,6 +153,19 @@ export const en = {
     generalSettings: 'General Settings',
     generalSettingsDescription: 'Configure general application options',
     languageDescription: 'Choose your preferred interface language',
+    about: 'About',
+    displaySettings: 'Display Settings',
+    displaySettingsDescription: 'Configure application display options',
+    dateFormat: 'Date Format',
+    numberFormat: 'Number Format',
+    aboutYouTubeRadar: 'About YouTube Radar',
+    aboutDescription: 'YouTube channel data tracking and analytics tool',
+    features: 'Features',
+    dataStorage: 'Data Storage',
+    dataStorageDescription: 'All data is stored locally in your browser. No data is uploaded to any server. This means you have full control over your data, but please remember to backup important data regularly.',
+    versionInfo: 'Version Info',
+    version: 'Version',
+    lastUpdated: 'Last Updated',
     goToSettings: 'Go to Settings',
     database: 'Database',
     security: 'Security Config',

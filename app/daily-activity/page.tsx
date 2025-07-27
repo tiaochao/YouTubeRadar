@@ -37,28 +37,11 @@ export default function DailyActivityPage() {
   const [days, setDays] = useState(30)
 
   useEffect(() => {
-    fetchDailyActivity()
+    // 对于本地存储版本，我们暂时显示无数据
+    // 因为本地存储不支持历史数据追踪
+    setLoading(false)
+    setActivities([])
   }, [days])
-
-  const fetchDailyActivity = async () => {
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const response = await fetch(`/api/daily-activity?days=${days}`)
-      const data = await response.json()
-      
-      if (data.ok) {
-        setActivities(data.data)
-      } else {
-        setError(data.error)
-      }
-    } catch (err) {
-      setError(t('errors.unexpectedError'))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -135,9 +118,18 @@ export default function DailyActivityPage() {
       </div>
 
       {activities.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">{t('dailyActivity.noActivity')}</p>
+        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+            <Activity className="h-12 w-12 text-amber-500" />
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium text-amber-800">{t('dailyActivity.localStorageLimit')}</p>
+              <p className="text-muted-foreground max-w-md">
+                {t('dailyActivity.localStorageDescription')}
+              </p>
+              <p className="text-sm text-amber-600">
+                {t('dailyActivity.configureDatabase')}
+              </p>
+            </div>
           </CardContent>
         </Card>
       ) : (

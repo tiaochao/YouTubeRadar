@@ -55,7 +55,10 @@ export const zh = {
     subscribersGained: '订阅者增长',
     activeChannels: '活跃频道',
     totalViews: '总观看量',
-    noActivity: '该时间范围内没有频道活动数据'
+    noActivity: '该时间范围内没有频道活动数据',
+    localStorageLimit: '本地存储版本限制',
+    localStorageDescription: '当前使用本地存储，无法追踪历史活动数据。如需查看每日活动统计，请连接到 Supabase 或其他数据库。',
+    configureDatabase: '提示：您可以在设置页面配置数据库连接'
   },
 
   // Channels Page
@@ -135,6 +138,7 @@ export const zh = {
 
   // Error Messages
   errors: {
+    error: '错误',
     loadingChannels: '加载频道时出错',
     unexpectedError: '发生了意外错误。',
     failedToDelete: '删除频道失败',
@@ -149,6 +153,19 @@ export const zh = {
     generalSettings: '通用设置',
     generalSettingsDescription: '配置应用程序的通用选项',
     languageDescription: '选择您偏好的界面语言',
+    about: '关于',
+    displaySettings: '显示设置',
+    displaySettingsDescription: '配置应用程序的显示选项',
+    dateFormat: '日期格式',
+    numberFormat: '数字格式',
+    aboutYouTubeRadar: '关于 YouTube Radar',
+    aboutDescription: 'YouTube 频道数据追踪和分析工具',
+    features: '功能特点',
+    dataStorage: '数据存储',
+    dataStorageDescription: '所有数据都保存在您的浏览器本地存储中，不会上传到任何服务器。这意味着您的数据完全由您控制，但也请注意定期备份重要数据。',
+    versionInfo: '版本信息',
+    version: '版本',
+    lastUpdated: '最后更新',
     goToSettings: '前往设置',
     database: '数据库',
     security: '安全配置',
