@@ -3,6 +3,7 @@ import { db } from "./db"
 
 interface Channel {
   id: string
+  channelId: string
   title: string
   handle: string
   thumbnailUrl?: string
@@ -24,12 +25,13 @@ export class DatabaseAdapter {
       
       return channels.map(ch => ({
         id: ch.id,
+        channelId: ch.channelId,
         title: ch.title,
-        handle: ch.handle,
+        handle: ch.customUrl || ch.channelId,
         thumbnailUrl: ch.thumbnailUrl,
-        viewCount: ch.viewCount,
-        subscriberCount: ch.subscriberCount,
-        videoCount: ch.videoCount,
+        viewCount: Number(ch.viewCount || 0),
+        subscriberCount: Number(ch.totalSubscribers || 0),
+        videoCount: ch.videoCount || 0,
         note: ch.note,
         createdAt: ch.createdAt,
         updatedAt: ch.updatedAt
@@ -45,12 +47,13 @@ export class DatabaseAdapter {
     try {
       const newChannel = await db.channel.create({
         data: {
-          id: channel.id,
+          channelId: channel.channelId,
           title: channel.title,
-          handle: channel.handle,
+          customUrl: channel.handle,
           thumbnailUrl: channel.thumbnailUrl,
-          viewCount: channel.viewCount || 0,
-          subscriberCount: channel.subscriberCount || 0,
+          viewCount: BigInt(channel.viewCount || 0),
+          totalViews: BigInt(channel.viewCount || 0),
+          totalSubscribers: BigInt(channel.subscriberCount || 0),
           videoCount: channel.videoCount || 0,
           note: channel.note,
           status: 'active'
@@ -59,12 +62,13 @@ export class DatabaseAdapter {
       
       return {
         id: newChannel.id,
+        channelId: newChannel.channelId,
         title: newChannel.title,
-        handle: newChannel.handle,
+        handle: newChannel.customUrl || newChannel.channelId,
         thumbnailUrl: newChannel.thumbnailUrl,
-        viewCount: newChannel.viewCount,
-        subscriberCount: newChannel.subscriberCount,
-        videoCount: newChannel.videoCount,
+        viewCount: Number(newChannel.viewCount || 0),
+        subscriberCount: Number(newChannel.totalSubscribers || 0),
+        videoCount: newChannel.videoCount || 0,
         note: newChannel.note,
         createdAt: newChannel.createdAt,
         updatedAt: newChannel.updatedAt
@@ -79,13 +83,13 @@ export class DatabaseAdapter {
   async updateChannel(channelId: string, updatedData: Partial<Channel>): Promise<Channel | null> {
     try {
       const updatedChannel = await db.channel.update({
-        where: { id: channelId },
+        where: { channelId: channelId },
         data: {
           ...(updatedData.title && { title: updatedData.title }),
-          ...(updatedData.handle && { handle: updatedData.handle }),
+          ...(updatedData.handle && { customUrl: updatedData.handle }),
           ...(updatedData.thumbnailUrl && { thumbnailUrl: updatedData.thumbnailUrl }),
-          ...(updatedData.viewCount !== undefined && { viewCount: updatedData.viewCount }),
-          ...(updatedData.subscriberCount !== undefined && { subscriberCount: updatedData.subscriberCount }),
+          ...(updatedData.viewCount !== undefined && { viewCount: BigInt(updatedData.viewCount) }),
+          ...(updatedData.subscriberCount !== undefined && { totalSubscribers: BigInt(updatedData.subscriberCount) }),
           ...(updatedData.videoCount !== undefined && { videoCount: updatedData.videoCount }),
           ...(updatedData.note !== undefined && { note: updatedData.note }),
           updatedAt: new Date()
@@ -94,12 +98,13 @@ export class DatabaseAdapter {
       
       return {
         id: updatedChannel.id,
+        channelId: updatedChannel.channelId,
         title: updatedChannel.title,
-        handle: updatedChannel.handle,
+        handle: updatedChannel.customUrl || updatedChannel.channelId,
         thumbnailUrl: updatedChannel.thumbnailUrl,
-        viewCount: updatedChannel.viewCount,
-        subscriberCount: updatedChannel.subscriberCount,
-        videoCount: updatedChannel.videoCount,
+        viewCount: Number(updatedChannel.viewCount || 0),
+        subscriberCount: Number(updatedChannel.totalSubscribers || 0),
+        videoCount: updatedChannel.videoCount || 0,
         note: updatedChannel.note,
         createdAt: updatedChannel.createdAt,
         updatedAt: updatedChannel.updatedAt
@@ -114,7 +119,7 @@ export class DatabaseAdapter {
   async deleteChannel(channelId: string): Promise<boolean> {
     try {
       await db.channel.delete({
-        where: { id: channelId }
+        where: { channelId: channelId }
       })
       return true
     } catch (error) {

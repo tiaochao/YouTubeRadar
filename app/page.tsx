@@ -144,7 +144,7 @@ export default function HomePage() {
 
       if (channel) {
         const newChannel = {
-          id: channel.id,
+          channelId: channel.id,
           title: channel.snippet.title,
           handle: channel.snippet.customUrl || `@${channel.id}`,
           thumbnailUrl: channel.snippet.thumbnails.medium.url,
@@ -226,7 +226,7 @@ export default function HomePage() {
   }
 
   const handleSaveNote = async (channelId: string) => {
-    const channel = channels.find(ch => ch.id === channelId)
+    const channel = channels.find(ch => (ch.channelId || ch.id) === channelId)
     if (channel) {
       try {
         const response = await fetch('/api/channels-db', {
@@ -299,7 +299,7 @@ export default function HomePage() {
       
       for (const channel of channels) {
         try {
-          const updatedChannel = await youtubeAPI.getChannelById(channel.id)
+          const updatedChannel = await youtubeAPI.getChannelById(channel.channelId || channel.id)
           if (updatedChannel) {
             const updated = {
               ...channel,
@@ -314,7 +314,7 @@ export default function HomePage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 action: 'update',
-                channelId: channel.id,
+                channelId: channel.channelId || channel.id,
                 channelData: {
                   viewCount: updated.viewCount,
                   subscriberCount: updated.subscriberCount,
@@ -331,7 +331,7 @@ export default function HomePage() {
             }
           }
         } catch (error) {
-          console.error(`Failed to sync channel ${channel.id}:`, error)
+          console.error(`Failed to sync channel ${channel.channelId || channel.id}:`, error)
           failCount++
         }
       }
@@ -429,7 +429,9 @@ export default function HomePage() {
 
       {message && (
         <Alert className={message.type === 'error' ? 'border-red-500' : 'border-green-500'}>
-          <AlertDescription>{message.text}</AlertDescription>
+          <AlertDescription>
+            <span>{message.text}</span>
+          </AlertDescription>
         </Alert>
       )}
 
@@ -546,7 +548,7 @@ export default function HomePage() {
           ) : (
             <div className="space-y-3">
               {filteredChannels.map((channel) => (
-                <div key={channel.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <div key={channel.channelId || channel.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3 flex-1">
                     {channel.thumbnailUrl && (
                       <img
@@ -558,7 +560,7 @@ export default function HomePage() {
                     <div className="flex-1">
                       <p className="font-medium">{channel.title}</p>
                       <p className="text-sm text-muted-foreground">{channel.handle}</p>
-                      {editingNoteId === channel.id && (
+                      {editingNoteId === (channel.channelId || channel.id) && (
                         <div className="flex items-center gap-2 mt-1">
                           <Input
                             value={noteInput}
@@ -568,7 +570,7 @@ export default function HomePage() {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
-                                handleSaveNote(channel.id)
+                                handleSaveNote(channel.channelId || channel.id)
                               }
                             }}
                           />
@@ -576,7 +578,7 @@ export default function HomePage() {
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0"
-                            onClick={() => handleSaveNote(channel.id)}
+                            onClick={() => handleSaveNote(channel.channelId || channel.id)}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -590,7 +592,7 @@ export default function HomePage() {
                           </Button>
                         </div>
                       )}
-                      {editingNoteId !== channel.id && channel.note && (
+                      {editingNoteId !== (channel.channelId || channel.id) && channel.note && (
                         <p className="text-sm text-muted-foreground mt-1">{channel.note}</p>
                       )}
                     </div>
@@ -614,7 +616,7 @@ export default function HomePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEditNote(channel.id, channel.note)}
+                        onClick={() => handleEditNote(channel.channelId || channel.id, channel.note)}
                         title="编辑备注"
                       >
                         <Edit3 className="h-4 w-4" />
@@ -632,7 +634,7 @@ export default function HomePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteChannel(channel.id)}
+                        onClick={() => handleDeleteChannel(channel.channelId || channel.id)}
                         title="删除频道"
                       >
                         <Trash2 className="h-4 w-4" />
