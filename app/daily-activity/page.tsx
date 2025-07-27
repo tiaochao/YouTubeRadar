@@ -45,6 +45,17 @@ export default function DailyActivityPage() {
     setError(null)
     
     try {
+      // 先检查数据库状态
+      const dbStatusResponse = await fetch('/api/db-status')
+      const dbStatus = await dbStatusResponse.json()
+      
+      if (!dbStatus.database?.connected) {
+        // 数据库未连接，显示本地存储提示
+        setActivities([])
+        setLoading(false)
+        return
+      }
+      
       // 尝试从 API 获取数据
       const response = await fetch(`/api/daily-activity?days=${days}`)
       const data = await response.json()
@@ -52,11 +63,13 @@ export default function DailyActivityPage() {
       if (data.ok) {
         setActivities(data.data)
       } else {
-        // 如果 API 失败，说明可能没有配置数据库
+        // 如果 API 失败
+        setError(data.error || '获取数据失败')
         setActivities([])
       }
-    } catch (err) {
+    } catch (err: any) {
       // 如果出错，显示本地存储版本
+      console.error('Failed to fetch daily activity:', err)
       setActivities([])
     } finally {
       setLoading(false)
