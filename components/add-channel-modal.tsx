@@ -60,7 +60,7 @@ export function AddChannelModal({ isOpen, onClose, onChannelAdded }: AddChannelM
           updatedAt: new Date()
         }
         
-        const addResponse = await fetch('/api/channels-new', {
+        const addResponse = await fetch('/api/channels-db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

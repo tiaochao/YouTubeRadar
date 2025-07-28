@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { databaseAdapter } from "@/lib/database-adapter"
+import { storageAdapter } from "@/lib/storage-adapter"
 import { successResponse, errorResponse } from "@/lib/api-response"
 
 // 获取所有频道
 export async function GET() {
   try {
-    const channels = await databaseAdapter.getChannels()
-    return successResponse(channels)
+    // 获取存储信息
+    const storageInfo = await storageAdapter.getStorageInfo()
+    const channels = await storageAdapter.getChannels()
+    
+    return successResponse({ 
+      channels, 
+      storageInfo,
+      count: channels.length 
+    })
   } catch (error: any) {
     return errorResponse("Failed to get channels", error.message, 500)
   }
@@ -18,16 +25,16 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const { action, channelData, channelId } = data
 
-    // 先测试数据库连接
-    const isConnected = await databaseAdapter.isConnected()
+    // 检查存储连接
+    const isConnected = await storageAdapter.isConnected()
     if (!isConnected) {
-      return errorResponse("Database connection failed", "Unable to connect to database", 503)
+      return errorResponse("Storage connection failed", "Unable to connect to storage", 503)
     }
 
     if (action === 'add') {
       try {
         console.log('添加频道请求:', { channelData })
-        const newChannel = await databaseAdapter.addChannel(channelData)
+        const newChannel = await storageAdapter.addChannel(channelData)
         if (newChannel) {
           console.log('频道添加成功:', newChannel)
           return successResponse(newChannel)
@@ -60,14 +67,14 @@ export async function POST(req: NextRequest) {
         return errorResponse("Failed to add channel", addError.message || "Database operation failed", 500)
       }
     } else if (action === 'update') {
-      const updatedChannel = await databaseAdapter.updateChannel(channelId, channelData)
+      const updatedChannel = await storageAdapter.updateChannel(channelId, channelData)
       if (updatedChannel) {
         return successResponse(updatedChannel)
       } else {
         return errorResponse("Failed to update channel", "Database operation failed", 500)
       }
     } else if (action === 'delete') {
-      const success = await databaseAdapter.deleteChannel(channelId)
+      const success = await storageAdapter.deleteChannel(channelId)
       if (success) {
         return successResponse({ success: true })
       } else {

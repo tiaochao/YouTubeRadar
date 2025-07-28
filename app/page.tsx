@@ -88,10 +88,15 @@ export default function HomePage() {
   const loadChannels = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/channels-new')
+      const response = await fetch('/api/channels-db')
       const data = await response.json()
       if (data.ok) {
-        setChannels(data.data || [])
+        setChannels(data.data?.channels || [])
+        // 显示存储类型信息
+        if (data.data?.storageInfo) {
+          const { type, connected } = data.data.storageInfo
+          console.log(`Using ${type} storage (connected: ${connected})`)
+        }
       } else {
         console.error('Failed to load channels:', data.error)
         setChannels([])
@@ -129,7 +134,7 @@ export default function HomePage() {
   const handleDeleteChannel = async (channelId: string) => {
     if (confirm('确定要删除这个频道吗？')) {
       try {
-        const response = await fetch('/api/channels-new', {
+        const response = await fetch('/api/channels-db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -160,7 +165,7 @@ export default function HomePage() {
     const channel = channels.find(ch => (ch.channelId || ch.id) === channelId)
     if (channel) {
       try {
-        const response = await fetch('/api/channels-new', {
+        const response = await fetch('/api/channels-db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

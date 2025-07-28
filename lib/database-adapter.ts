@@ -156,6 +156,12 @@ export class DatabaseAdapter {
   // 检查数据库连接
   async isConnected(): Promise<boolean> {
     try {
+      // 检查是否使用模拟客户端
+      if (!process.env.DATABASE_URL) {
+        console.log('No DATABASE_URL configured, using mock client')
+        return false
+      }
+      
       await db.$queryRaw`SELECT 1`
       console.log('Database connection test passed')
       return true
