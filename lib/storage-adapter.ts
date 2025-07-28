@@ -1,6 +1,7 @@
-// 统一存储适配器 - 自动选择GitHub、文件存储或浏览器本地存储
+// 统一存储适配器 - 自动选择GitHub、文件存储、内存存储或浏览器本地存储
 import { githubStorageAdapter } from "./github-storage-adapter"
 import { fileStorageAdapter } from "./file-storage-adapter"
+import { memoryStorageAdapter } from "./memory-storage-adapter"
 import { localStorageAdapter } from "./local-storage-adapter"
 
 interface Channel {
@@ -17,7 +18,7 @@ interface Channel {
   updatedAt: Date
 }
 
-type StorageType = 'github' | 'fileStorage' | 'localStorage'
+type StorageType = 'github' | 'fileStorage' | 'memoryStorage' | 'localStorage'
 
 class StorageAdapter {
   private _storageType: StorageType | null = null
@@ -32,7 +33,7 @@ class StorageAdapter {
     const isServer = typeof window === 'undefined'
     
     if (isServer) {
-      // 服务器端优先级: GitHub > FileStorage > LocalStorage
+      // 服务器端优先级: GitHub > FileStorage > MemoryStorage
       
       // 1. 首先尝试GitHub存储
       const githubConnected = await githubStorageAdapter.isConnected()
@@ -50,10 +51,10 @@ class StorageAdapter {
         return 'fileStorage'
       }
       
-      // 3. 最后使用localStorage作为回退
-      this._storageType = 'localStorage'
-      console.log('Storage adapter using: LocalStorage (server fallback)')
-      return 'localStorage'
+      // 3. 最后使用内存存储作为服务器端回退
+      this._storageType = 'memoryStorage'
+      console.log('Storage adapter using: Memory Storage (server fallback)')
+      return 'memoryStorage'
     } else {
       // 客户端使用localStorage
       this._storageType = 'localStorage'
@@ -71,6 +72,8 @@ class StorageAdapter {
         return githubStorageAdapter
       case 'fileStorage':
         return fileStorageAdapter
+      case 'memoryStorage':
+        return memoryStorageAdapter
       case 'localStorage':
       default:
         return localStorageAdapter
