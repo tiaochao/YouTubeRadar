@@ -1,68 +1,33 @@
-# Vercel 环境变量配置
+# Vercel 环境变量设置指南
 
-## 需要在 Vercel 中设置的环境变量
+请在 Vercel 项目设置中添加以下环境变量：
 
-```bash
-DATABASE_URL="postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres"
-YOUTUBE_API_KEY="AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4"
-NEXT_PUBLIC_YOUTUBE_API_KEY="AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4"
+1. 访问 https://vercel.com/tiaochao/youtuberadar888/settings/environment-variables
+
+2. 添加以下环境变量：
+
+```
+SUPABASE_URL
+值: https://ufcszgnfhiurfzrknofr.supabase.co
+
+SUPABASE_SERVICE_KEY
+值: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDc4MjQ0MSwiZXhwIjoyMDUwMzU4NDQxfQ.k9JXmU0hFh0xQ-oiVHtfO5Ag6uPJZD-mkmJ7ZZKNYxs
 ```
 
-## 方法 1：使用 Vercel CLI（推荐）
+3. 确保以下变量也已设置（应该已经存在）：
+```
+DATABASE_URL
+值: postgresql://postgres:54DG979491%21@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
 
-```bash
-# 安装 Vercel CLI（如果还没有）
-npm i -g vercel
+YOUTUBE_API_KEY
+值: AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4
 
-# 登录
-vercel login
-
-# 添加环境变量
-vercel env add DATABASE_URL production
-# 粘贴: postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
-
-vercel env add YOUTUBE_API_KEY production
-# 粘贴: AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4
-
-vercel env add NEXT_PUBLIC_YOUTUBE_API_KEY production
-# 粘贴: AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4
-
-# 触发重新部署
-vercel --prod
+NEXT_PUBLIC_YOUTUBE_API_KEY
+值: AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4
 ```
 
-## 方法 2：通过 Vercel Dashboard
+4. 点击 'Save' 保存所有环境变量
 
-如果 Dashboard 可以访问：
+5. 重新部署项目（Vercel 会自动触发重新部署）
 
-1. 登录 [Vercel](https://vercel.com/)
-2. 选择项目 `youtuberadar888`
-3. 进入 **Settings** → **Environment Variables**
-4. 添加以下三个变量：
-   - `DATABASE_URL`
-   - `YOUTUBE_API_KEY`
-   - `NEXT_PUBLIC_YOUTUBE_API_KEY`
-5. 保存后会自动重新部署
-
-## 验证部署
-
-部署完成后，访问：
-
-1. `https://youtuberadar888.vercel.app/` - 主页
-2. `https://youtuberadar888.vercel.app/test` - 测试页面
-3. `https://youtuberadar888.vercel.app/api/health` - 健康检查
-
-## 故障排除
-
-如果还有问题：
-
-1. 检查 Vercel Functions 日志
-2. 确保所有环境变量都已正确设置
-3. 访问 `/api/test` 查看环境变量状态
-
-## 数据库管理
-
-在 Supabase Dashboard 中：
-- 使用 Table Editor 查看数据
-- 使用 SQL Editor 运行查询
-- 查看实时日志
+注意：这些是敏感信息，请确保不要在公开场合分享这些密钥。
