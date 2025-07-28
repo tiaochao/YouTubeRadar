@@ -209,7 +209,10 @@ export default function HomePage() {
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        // 安全地移除DOM节点
+        if (a.parentNode) {
+          a.parentNode.removeChild(a)
+        }
         setMessageWithTimeout({ type: 'success', text: '数据导出成功' })
       } else {
         throw new Error('导出失败')
