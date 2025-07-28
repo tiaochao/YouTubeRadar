@@ -22,7 +22,8 @@ import {
   PlayCircle,
   Edit3,
   Check,
-  X
+  X,
+  Download
 } from "lucide-react"
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n/use-i18n"
@@ -195,6 +196,28 @@ export default function HomePage() {
     setNoteInput("")
   }
 
+  const handleExportData = async () => {
+    try {
+      const response = await fetch('/api/export?type=all')
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = url
+        a.download = `youtube-radar-export-${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+        setMessageWithTimeout({ type: 'success', text: '数据导出成功' })
+      } else {
+        throw new Error('导出失败')
+      }
+    } catch (error: any) {
+      setMessageWithTimeout({ type: 'error', text: `导出失败: ${error.message}` })
+    }
+  }
 
   const handleSyncAll = async () => {
     setIsSyncing(true)
@@ -350,6 +373,14 @@ export default function HomePage() {
             disabled={isSyncing || channels.length === 0}
           >
             <span>{isSyncing ? '同步中...' : '一键同步'}</span>
+          </Button>
+          <Button 
+            onClick={handleExportData}
+            variant="outline"
+            size="sm"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            导出数据
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/settings">

@@ -1,5 +1,5 @@
-// 统一存储适配器 - 自动选择数据库或本地存储
-import { databaseAdapter } from "./database-adapter"
+// 统一存储适配器 - 自动选择文件存储或浏览器本地存储
+import { fileStorageAdapter } from "./file-storage-adapter"
 import { localStorageAdapter } from "./local-storage-adapter"
 
 interface Channel {
@@ -25,18 +25,32 @@ class StorageAdapter {
       return this._usesDatabase
     }
     
-    // 首先尝试数据库
-    const dbConnected = await databaseAdapter.isConnected()
-    this._usesDatabase = dbConnected
-    
-    console.log(`Storage adapter using: ${dbConnected ? 'Database' : 'LocalStorage'}`)
-    return dbConnected
+    // 检查是否在服务器端环境
+    const isServer = typeof window === 'undefined'
+    if (isServer) {
+      // 服务器端使用文件存储
+      const fileConnected = await fileStorageAdapter.isConnected()
+      this._usesDatabase = fileConnected
+      console.log(`Storage adapter using: ${fileConnected ? 'FileStorage' : 'Fallback'}`)
+      return fileConnected
+    } else {
+      // 客户端使用localStorage
+      this._usesDatabase = false
+      console.log('Storage adapter using: LocalStorage (client-side)')
+      return false
+    }
   }
   
   // 获取当前存储适配器
   private async getAdapter() {
-    const usesDatabase = await this.detectStorageType()
-    return usesDatabase ? databaseAdapter : localStorageAdapter
+    const usesFileStorage = await this.detectStorageType()
+    const isServer = typeof window === 'undefined'
+    
+    if (isServer) {
+      return usesFileStorage ? fileStorageAdapter : localStorageAdapter
+    } else {
+      return localStorageAdapter
+    }
   }
   
   // 获取所有频道
@@ -70,13 +84,14 @@ class StorageAdapter {
   }
   
   // 获取存储类型信息
-  async getStorageInfo(): Promise<{ type: 'database' | 'localStorage', connected: boolean }> {
-    const usesDatabase = await this.detectStorageType()
+  async getStorageInfo(): Promise<{ type: 'fileStorage' | 'localStorage', connected: boolean }> {
+    const usesFileStorage = await this.detectStorageType()
     const adapter = await this.getAdapter()
     const connected = await adapter.isConnected()
+    const isServer = typeof window === 'undefined'
     
     return {
-      type: usesDatabase ? 'database' : 'localStorage',
+      type: (isServer && usesFileStorage) ? 'fileStorage' : 'localStorage',
       connected
     }
   }
