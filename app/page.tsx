@@ -333,6 +333,11 @@ export default function HomePage() {
         channel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         channel.handle.toLowerCase().includes(searchQuery.toLowerCase())
       )
+      .map(channel => ({
+        ...channel,
+        // Ensure each channel has a stable unique key
+        stableKey: channel.id || channel.channelId || channel.title
+      }))
       .sort((a, b) => {
         switch (sortBy) {
           case 'name':
@@ -509,7 +514,7 @@ export default function HomePage() {
           ) : (
             <div className="space-y-3">
               {filteredChannels.map((channel) => (
-                <div key={channel.channelId || channel.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <div key={channel.stableKey} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3 flex-1">
                     {channel.thumbnailUrl && (
                       <img
