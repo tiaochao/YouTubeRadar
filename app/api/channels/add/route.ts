@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
+import { storageAdapter } from "@/lib/storage-adapter"
 import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
 
 export async function POST(req: NextRequest) {
@@ -31,17 +31,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "未找到频道" }, { status: 404 })
     }
     
-    // 保存到数据库
-    const savedChannel = await db.channel.create({
-      data: {
-        id: channel.id,
-        title: channel.snippet.title,
-        handle: channel.snippet.customUrl || `@${channel.id}`,
-        thumbnailUrl: channel.snippet.thumbnails.medium.url,
-        viewCount: parseInt(channel.statistics.viewCount) || 0,
-        subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
-        videoCount: parseInt(channel.statistics.videoCount) || 0,
-      }
+    // 保存到存储适配器
+    const savedChannel = await storageAdapter.addChannel({
+      id: channel.id,
+      channelId: channel.id,
+      title: channel.snippet.title,
+      handle: channel.snippet.customUrl || `@${channel.id}`,
+      thumbnailUrl: channel.snippet.thumbnails.medium.url,
+      viewCount: parseInt(channel.statistics.viewCount) || 0,
+      subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
+      videoCount: parseInt(channel.statistics.videoCount) || 0,
+      status: 'active',
+      description: channel.snippet.description || undefined,
+      country: channel.snippet.country || undefined,
+      customUrl: channel.snippet.customUrl || undefined,
+      publishedAt: channel.snippet.publishedAt ? new Date(channel.snippet.publishedAt) : undefined
     })
     
     return NextResponse.json({ ok: true, data: savedChannel })

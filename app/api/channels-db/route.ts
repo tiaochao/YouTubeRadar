@@ -26,9 +26,16 @@ export async function POST(req: NextRequest) {
     const { action, channelData, channelId } = data
 
     // 检查存储连接
+    console.log('正在检查存储连接...')
+    const storageInfo = await storageAdapter.getStorageInfo()
+    console.log('存储信息:', storageInfo)
+    
     const isConnected = await storageAdapter.isConnected()
+    console.log('存储连接状态:', isConnected)
+    
     if (!isConnected) {
-      return errorResponse("Storage connection failed", "Unable to connect to storage", 503)
+      console.error('存储连接失败 - 存储类型:', storageInfo.type)
+      return errorResponse("Storage connection failed", `Unable to connect to ${storageInfo.type} storage`, 503)
     }
 
     if (action === 'add') {
