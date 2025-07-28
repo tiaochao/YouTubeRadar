@@ -81,13 +81,17 @@ function AddChannelSection({ onChannelAdded }: { onChannelAdded: () => void }) {
           })
         })
         
+        console.log('添加频道响应状态:', addResponse.status)
         const addData = await addResponse.json()
+        console.log('添加频道响应数据:', addData)
+        
         if (addData.ok) {
           setMessage({ type: 'success', text: '频道添加成功' })
           setChannelInput("")
           setIsOpen(false)
           onChannelAdded()
         } else {
+          console.error('添加频道失败:', addData)
           throw new Error(addData.error || '添加频道失败')
         }
       } else {
