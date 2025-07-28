@@ -14,7 +14,7 @@ export async function GET() {
     
     // 直接使用 fetch 测试 Supabase REST API
     const url = 'https://ufcszgnfhiurfzrknofr.supabase.co'
-    const apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDc4MjQ0MSwiZXhwIjoyMDUwMzU4NDQxfQ.k9JXmU0hFh0xQ-oiVHtfO5Ag6uPJZD-mkmJ7ZZKNYxs'
+    const apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzM2OTQsImV4cCI6MjA2NTc0OTY5NH0._MedjtAfZbs9r_VDb-X7zaHEB_m7SRKHJaae4UWVSTM'
     
     console.log('Testing direct Supabase REST API...')
     

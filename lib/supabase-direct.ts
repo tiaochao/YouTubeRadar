@@ -27,13 +27,20 @@ export function getSupabase() {
   if (!supabase) {
     // 直接使用配置的 URL 和密钥
     const url = process.env.SUPABASE_URL || 'https://ufcszgnfhiurfzrknofr.supabase.co'
-    const serviceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDc4MjQ0MSwiZXhwIjoyMDUwMzU4NDQxfQ.k9JXmU0hFh0xQ-oiVHtfO5Ag6uPJZD-mkmJ7ZZKNYxs'
+    // 使用您提供的 anon key
+    const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzM2OTQsImV4cCI6MjA2NTc0OTY5NH0._MedjtAfZbs9r_VDb-X7zaHEB_m7SRKHJaae4UWVSTM'
+    const serviceKey = process.env.SUPABASE_SERVICE_KEY || anonKey
     
     console.log('Initializing Supabase client with URL:', url)
     
     supabase = createClient(url, serviceKey, {
       auth: {
         persistSession: false
+      },
+      global: {
+        headers: {
+          'x-my-custom-header': 'youtube-radar'
+        }
       }
     })
   }
