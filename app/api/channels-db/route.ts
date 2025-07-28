@@ -19,11 +19,19 @@ export async function POST(req: NextRequest) {
     const { action, channelData, channelId } = data
 
     if (action === 'add') {
-      const newChannel = await databaseAdapter.addChannel(channelData)
-      if (newChannel) {
-        return successResponse(newChannel)
-      } else {
-        return errorResponse("Failed to add channel", "Database operation failed", 500)
+      try {
+        const newChannel = await databaseAdapter.addChannel(channelData)
+        if (newChannel) {
+          return successResponse(newChannel)
+        } else {
+          return errorResponse("Failed to add channel", "Database operation failed", 500)
+        }
+      } catch (addError: any) {
+        console.error('添加频道时出错:', addError)
+        if (addError.message === '频道已存在') {
+          return errorResponse("Channel already exists", "频道已存在", 409)
+        }
+        return errorResponse("Failed to add channel", addError.message || "Database operation failed", 500)
       }
     } else if (action === 'update') {
       const updatedChannel = await databaseAdapter.updateChannel(channelId, channelData)

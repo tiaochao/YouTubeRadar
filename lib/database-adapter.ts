@@ -45,6 +45,18 @@ export class DatabaseAdapter {
   // 添加频道
   async addChannel(channel: Omit<Channel, 'createdAt' | 'updatedAt'>): Promise<Channel | null> {
     try {
+      console.log('尝试添加频道到数据库:', channel)
+      
+      // 先检查频道是否已存在
+      const existing = await db.channel.findUnique({
+        where: { channelId: channel.channelId }
+      })
+      
+      if (existing) {
+        console.log('频道已存在:', existing.channelId)
+        throw new Error('频道已存在')
+      }
+      
       const newChannel = await db.channel.create({
         data: {
           channelId: channel.channelId,
@@ -60,6 +72,8 @@ export class DatabaseAdapter {
         }
       })
       
+      console.log('频道添加成功:', newChannel.channelId)
+      
       return {
         id: newChannel.id,
         channelId: newChannel.channelId,
@@ -73,9 +87,13 @@ export class DatabaseAdapter {
         createdAt: newChannel.createdAt,
         updatedAt: newChannel.updatedAt
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add channel to database:', error)
-      return null
+      console.error('错误详情:', error.message)
+      if (error.code === 'P2002') {
+        throw new Error('频道已存在')
+      }
+      throw error
     }
   }
 
