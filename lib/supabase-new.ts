@@ -105,7 +105,9 @@ export const supabaseOps = {
         total_subscribers: channel.subscriberCount || 0,
         video_count: channel.videoCount || 0,
         note: channel.note,
-        status: 'active'
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single()
