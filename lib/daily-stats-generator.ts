@@ -61,6 +61,11 @@ export async function generateChannelDailyStats(channelId: string, date: Date): 
   }
 }
 
+/**
+ * Generate and store daily statistics for a channel (legacy function)
+ */
+export async function generateChannelDailyStatsLegacy(channelId: string, targetDate: Date, existingStats?: any): Promise<void> {
+  try {
     // If stats exist but don't have video publishing data, we should update them
     const shouldUpdate = existingStats && (
       existingStats.videosPublished === null || 
