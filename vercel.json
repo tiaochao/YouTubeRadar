@@ -1,14 +1,22 @@
 {
-  "buildCommand": "npm run build || true",
+  "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps --production=false",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_YOUTUBE_API_KEY": "AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4",
     "SKIP_ENV_VALIDATION": "true"
   },
   "functions": {
     "app/api/health/route.ts": {
       "maxDuration": 10
+    },
+    "app/api/channels/sync-all/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/*/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/auth/*/route.ts": {
+      "maxDuration": 30
     }
   }
 }

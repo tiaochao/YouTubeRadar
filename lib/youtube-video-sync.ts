@@ -1,7 +1,7 @@
 import { db } from "./db"
 import { logger } from "./logger"
 import { createYouTubeClient } from "./youtube-public-api"
-import { generateChannelDailyStats } from "./daily-stats-generator"
+// Daily stats generation removed
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || ''
 
@@ -195,7 +195,7 @@ export async function syncChannelVideos(channelId: string) {
 
     // Generate daily stats for today
     try {
-      await generateChannelDailyStats(channelId, new Date())
+      // Daily stats generation removed
       logger.info("VideoSync", `Generated daily stats for channel: ${channel.title}`)
     } catch (error) {
       logger.warn("VideoSync", `Failed to generate daily stats for channel ${channel.title}:`, error)

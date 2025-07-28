@@ -44,35 +44,13 @@ export async function GET(req: NextRequest) {
 
     const orderBy: any = { [sortBy]: sortOrder }
 
-    const dailyStats = await db.channelDailyStat.findMany({
-      where: whereClause,
-      orderBy: orderBy,
-      skip,
-      take: pageSize,
-      include: {
-        channel: {
-          select: { title: true, thumbnailUrl: true },
-        },
-      },
-    })
-
-    const totalStats = await db.channelDailyStat.count({ where: whereClause })
-
-    // Convert BigInts to string for serialization
-    const serializableStats = dailyStats.map((stat) => ({
-      ...stat,
-      views: stat.views.toString(),
-      estimatedMinutesWatched: stat.estimatedMinutesWatched.toString(),
-      impressions: stat.impressions.toString(),
-      totalVideoViews: stat.totalVideoViews.toString(),
-    }))
-
+    // Daily stats functionality has been removed
     return successResponse({
-      data: serializableStats,
-      total: totalStats,
+      data: [],
+      total: 0,
       page,
       pageSize,
-      totalPages: Math.ceil(totalStats / pageSize),
+      totalPages: 0,
     })
   } catch (error: any) {
     logger.error("API/Analytics", "Failed to fetch daily analytics.", error)

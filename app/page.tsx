@@ -190,31 +190,6 @@ export default function HomePage() {
     setNoteInput("")
   }
 
-  const handleGenerateDailyStats = async () => {
-    try {
-      const response = await fetch('/api/generate-daily-stats-new', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      })
-      
-      const data = await response.json()
-      if (data.ok) {
-        setMessageWithTimeout({ 
-          type: 'success', 
-          text: `已生成 ${data.data.statsCount} 个频道的每日统计数据` 
-        })
-      } else {
-        setMessageWithTimeout({ 
-          type: 'error', 
-          text: data.error || '生成每日统计失败' 
-        })
-      }
-    } catch (error) {
-      console.error('Failed to generate daily stats:', error)
-      setMessageWithTimeout({ type: 'error', text: '生成每日统计失败' })
-    }
-  }
 
   const handleSyncAll = async () => {
     setIsSyncing(true)
@@ -324,14 +299,6 @@ export default function HomePage() {
             disabled={isSyncing || channels.length === 0}
           >
             <span>{isSyncing ? '同步中...' : '一键同步'}</span>
-          </Button>
-          <Button 
-            onClick={handleGenerateDailyStats}
-            variant="outline"
-            disabled={channels.length === 0}
-          >
-            <Activity className="mr-2 h-4 w-4" />
-            生成每日统计
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/settings">
@@ -560,15 +527,6 @@ export default function HomePage() {
         </CardContent>
       </Card>
 
-      {/* 快速链接 */}
-      <div className="flex justify-center">
-        <Button variant="outline" asChild className="h-auto py-4 px-8">
-          <Link href="/daily-activity" className="flex flex-col items-center gap-2">
-            <Activity className="h-6 w-6 text-green-600" />
-            <span>每日活动</span>
-          </Link>
-        </Button>
-      </div>
     </div>
   )
 }

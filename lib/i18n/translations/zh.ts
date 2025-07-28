@@ -3,7 +3,6 @@ export const zh = {
   navigation: {
     channels: '频道',
     analytics: '分析', 
-    dailyActivity: '每日活动',
     settings: '设置',
     home: '首页',
     publicAnalytics: '公开分析'
@@ -39,27 +38,8 @@ export const zh = {
     noChannels: '暂无频道数据',
     recentVideos: '最新发布的视频',
     latestVideos: '您的频道最近发布的视频',
-    viewDailyActivity: '每日活动'
   },
 
-  // Daily Activity
-  dailyActivity: {
-    title: '每日活动',
-    description: '查看有更新活动的频道和视频发布情况',
-    showDays: '查看范围',
-    date: '日期',
-    channel: '频道',
-    videosPublished: '发布视频',
-    liveVideos: '有效直播',
-    dailyViews: '当日观看量',
-    subscribersGained: '订阅者增长',
-    activeChannels: '活跃频道',
-    totalViews: '总观看量',
-    noActivity: '该时间范围内没有频道活动数据',
-    localStorageLimit: '本地存储版本限制',
-    localStorageDescription: '当前使用本地存储，无法追踪历史活动数据。如需查看每日活动统计，请连接到 Supabase 或其他数据库。',
-    configureDatabase: '提示：您可以在设置页面配置数据库连接'
-  },
 
   // Channels Page
   channels: {

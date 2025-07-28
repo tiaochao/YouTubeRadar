@@ -14,10 +14,6 @@ export const prisma = {
     update: async () => null,
     delete: async () => null,
   },
-  channelDailyStat: {
-    findMany: async () => [],
-    create: async () => null,
-  },
   videoStatSnapshot: {
     findMany: async () => [],
     create: async () => null,

@@ -27,7 +27,6 @@ model Channel {
   totalViews        BigInt?             @map("total_views")
   totalSubscribers  BigInt?             @map("total_subscribers")
   note              String?             @map("note")
-  dailyStats        ChannelDailyStat[]
   VideoStatSnapshot VideoStatSnapshot[]
   videos            Video[]
 
@@ -74,31 +73,6 @@ model VideoStatSnapshot {
   @@map("video_stat_snapshots")
 }
 
-model ChannelDailyStat {
-  id                      String   @id @default(uuid())
-  channelId               String   @map("channel_id")
-  date                    DateTime @db.Date
-  views                   BigInt
-  watchTimeHours          Float    @map("watch_time_hours")
-  subscribersGained       Int      @map("subscribers_gained")
-  subscribersLost         Int      @map("subscribers_lost")
-  estimatedMinutesWatched BigInt   @map("estimated_minutes_watched")
-  impressions             BigInt
-  impressionCtr           Float    @map("impression_ctr")
-  videosPublished         Int      @default(0) @map("videos_published")
-  videosPublishedLive     Int      @default(0) @map("videos_published_live")
-  totalVideoViews         BigInt   @default(0) @map("total_video_views")
-  avgViewsPerVideo        Float    @default(0) @map("avg_views_per_video")
-  updatedAt               DateTime @updatedAt @map("updated_at")
-  channel                 Channel  @relation(fields: [channelId], references: [channelId])
-
-  @@unique([channelId, date])
-  @@index([channelId, date])
-  @@index([views])
-  @@index([subscribersGained])
-  @@index([videosPublished])
-  @@map("channel_daily_stats")
-}
 
 model TaskLog {
   id         String    @id @default(uuid())
@@ -134,6 +108,5 @@ enum ChannelStatus {
 enum TaskType {
   VIDEO_SYNC
   CHANNEL_HOURLY
-  CHANNEL_DAILY
   PUBSUB_NEW_VIDEO
 }

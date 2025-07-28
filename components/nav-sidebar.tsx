@@ -35,18 +35,6 @@ export function NavSidebar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                href="/daily-activity"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-red-50 md:h-8 md:w-8"
-              >
-                <Radar className="h-5 w-5 transition-all hover:text-red-600" />
-                <span className="sr-only">{t('navigation.dailyActivity')}</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('navigation.dailyActivity')}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
                 href="/settings"
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
