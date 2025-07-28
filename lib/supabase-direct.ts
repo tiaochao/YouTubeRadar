@@ -4,9 +4,17 @@ import { createClient } from '@supabase/supabase-js'
 function parseSupabaseUrl(databaseUrl: string) {
   // postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres
   const match = databaseUrl.match(/postgresql:\/\/postgres:(.+)@db\.(.+)\.supabase\.co/)
-  if (!match) throw new Error('Invalid Supabase DATABASE_URL')
+  if (!match) {
+    console.error('DATABASE_URL format:', databaseUrl)
+    throw new Error('Invalid Supabase DATABASE_URL')
+  }
   
-  const [_, password, projectRef] = match
+  const [_, passwordAndPort, projectRef] = match
+  // 移除端口号
+  const password = passwordAndPort.split(':')[0]
+  
+  console.log('Parsed Supabase config:', { projectRef, passwordLength: password.length })
+  
   return {
     url: `https://${projectRef}.supabase.co`,
     anonKey: process.env.SUPABASE_ANON_KEY || password // 需要在环境变量中设置
@@ -17,10 +25,11 @@ let supabase: ReturnType<typeof createClient> | null = null
 
 export function getSupabase() {
   if (!supabase) {
-    const databaseUrl = process.env.DATABASE_URL!
-    const { url } = parseSupabaseUrl(databaseUrl)
-    // 使用服务角色密钥进行完全访问
+    // 直接使用配置的 URL 和密钥
+    const url = process.env.SUPABASE_URL || 'https://ufcszgnfhiurfzrknofr.supabase.co'
     const serviceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDc4MjQ0MSwiZXhwIjoyMDUwMzU4NDQxfQ.k9JXmU0hFh0xQ-oiVHtfO5Ag6uPJZD-mkmJ7ZZKNYxs'
+    
+    console.log('Initializing Supabase client with URL:', url)
     
     supabase = createClient(url, serviceKey, {
       auth: {

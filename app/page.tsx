@@ -98,7 +98,8 @@ function AddChannelSection({ onChannelAdded }: { onChannelAdded: () => void }) {
         setMessage({ type: 'error', text: '未找到频道' })
       }
     } catch (error: any) {
-      console.error('Failed to add channel:', error)
+      console.error('Failed to add channel - Full error:', error)
+      console.error('Error stack:', error.stack)
       const errorMessage = error.message || '添加频道失败'
       
       if (errorMessage.includes('API key not valid')) {
