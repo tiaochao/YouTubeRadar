@@ -72,7 +72,7 @@ function AddChannelSection({ onChannelAdded }: { onChannelAdded: () => void }) {
           updatedAt: new Date()
         }
         
-        const addResponse = await fetch('/api/channels-db', {
+        const addResponse = await fetch('/api/channels-supabase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -203,7 +203,7 @@ export default function HomePage() {
   const loadChannels = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/channels-db')
+      const response = await fetch('/api/channels-supabase')
       const data = await response.json()
       if (data.ok) {
         setChannels(data.data || [])
@@ -244,7 +244,7 @@ export default function HomePage() {
   const handleDeleteChannel = async (channelId: string) => {
     if (confirm('确定要删除这个频道吗？')) {
       try {
-        const response = await fetch('/api/channels-db', {
+        const response = await fetch('/api/channels-supabase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -275,7 +275,7 @@ export default function HomePage() {
     const channel = channels.find(ch => (ch.channelId || ch.id) === channelId)
     if (channel) {
       try {
-        const response = await fetch('/api/channels-db', {
+        const response = await fetch('/api/channels-supabase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

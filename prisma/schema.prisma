@@ -48,7 +48,7 @@ model Video {
   duration    String?             @map("duration") // ISO 8601 duration format
   createdAt   DateTime            @default(now()) @map("created_at")
   snapshots   VideoStatSnapshot[]
-  channel     Channel             @relation(fields: [channelId], references: [id])
+  channel     Channel             @relation(fields: [channelId], references: [channelId])
 
   @@index([channelId])
   @@index([publishedAt])
@@ -64,8 +64,8 @@ model VideoStatSnapshot {
   viewCount    BigInt   @map("view_count")
   likeCount    BigInt   @map("like_count")
   commentCount BigInt   @map("comment_count")
-  channel      Channel  @relation(fields: [channelId], references: [id])
-  video        Video    @relation(fields: [videoId], references: [id])
+  channel      Channel  @relation(fields: [channelId], references: [channelId])
+  video        Video    @relation(fields: [videoId], references: [videoId])
 
   @@unique([videoId, collectedAt])
   @@index([channelId, collectedAt])
@@ -90,7 +90,7 @@ model ChannelDailyStat {
   totalVideoViews         BigInt   @default(0) @map("total_video_views")
   avgViewsPerVideo        Float    @default(0) @map("avg_views_per_video")
   updatedAt               DateTime @updatedAt @map("updated_at")
-  channel                 Channel  @relation(fields: [channelId], references: [id])
+  channel                 Channel  @relation(fields: [channelId], references: [channelId])
 
   @@unique([channelId, date])
   @@index([channelId, date])

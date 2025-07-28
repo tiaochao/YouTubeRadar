@@ -1,0 +1,109 @@
+import { createClient } from '@supabase/supabase-js'
+
+// 从 DATABASE_URL 中提取 Supabase 配置
+function parseSupabaseUrl(databaseUrl: string) {
+  // postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres
+  const match = databaseUrl.match(/postgresql:\/\/postgres:(.+)@db\.(.+)\.supabase\.co/)
+  if (!match) throw new Error('Invalid Supabase DATABASE_URL')
+  
+  const [_, password, projectRef] = match
+  return {
+    url: `https://${projectRef}.supabase.co`,
+    anonKey: process.env.SUPABASE_ANON_KEY || password // 需要在环境变量中设置
+  }
+}
+
+let supabase: ReturnType<typeof createClient> | null = null
+
+export function getSupabase() {
+  if (!supabase) {
+    const databaseUrl = process.env.DATABASE_URL!
+    const { url } = parseSupabaseUrl(databaseUrl)
+    // 使用服务角色密钥进行完全访问
+    const serviceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDc4MjQ0MSwiZXhwIjoyMDUwMzU4NDQxfQ.k9JXmU0hFh0xQ-oiVHtfO5Ag6uPJZD-mkmJ7ZZKNYxs'
+    
+    supabase = createClient(url, serviceKey, {
+      auth: {
+        persistSession: false
+      }
+    })
+  }
+  return supabase
+}
+
+// 频道操作的直接实现
+export const supabaseChannelOps = {
+  async getChannels() {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('channels')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  async addChannel(channel: any) {
+    const supabase = getSupabase()
+    
+    // 先检查是否存在
+    const { data: existing } = await supabase
+      .from('channels')
+      .select('channel_id')
+      .eq('channel_id', channel.channelId)
+      .single()
+    
+    if (existing) {
+      throw new Error('频道已存在')
+    }
+    
+    const { data, error } = await supabase
+      .from('channels')
+      .insert({
+        channel_id: channel.channelId,
+        title: channel.title,
+        custom_url: channel.handle,
+        thumbnail_url: channel.thumbnailUrl,
+        view_count: channel.viewCount || 0,
+        total_views: channel.viewCount || 0,
+        total_subscribers: channel.subscriberCount || 0,
+        video_count: channel.videoCount || 0,
+        note: channel.note,
+        status: 'active'
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateChannel(channelId: string, updates: any) {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('channels')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('channel_id', channelId)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteChannel(channelId: string) {
+    const supabase = getSupabase()
+    const { error } = await supabase
+      .from('channels')
+      .delete()
+      .eq('channel_id', channelId)
+    
+    if (error) throw error
+    return true
+  }
+}
