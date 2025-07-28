@@ -8,7 +8,8 @@ export async function GET() {
       hasSupabaseUrl: !!process.env.SUPABASE_URL,
       hasSupabaseKey: !!process.env.SUPABASE_SERVICE_KEY,
       nodeEnv: process.env.NODE_ENV,
-      vercel: !!process.env.VERCEL
+      vercel: !!process.env.VERCEL,
+      timestamp: new Date().toISOString()
     }
     
     // 直接使用 fetch 测试 Supabase REST API
