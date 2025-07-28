@@ -47,6 +47,13 @@ export class DatabaseAdapter {
     try {
       console.log('尝试添加频道到数据库:', channel)
       
+      // 确保数字值的安全转换
+      const viewCount = Math.max(0, parseInt(String(channel.viewCount || 0)))
+      const subscriberCount = Math.max(0, parseInt(String(channel.subscriberCount || 0)))
+      const videoCount = Math.max(0, parseInt(String(channel.videoCount || 0)))
+      
+      console.log('转换后的数值:', { viewCount, subscriberCount, videoCount })
+      
       // 先检查频道是否已存在
       const existing = await db.channel.findUnique({
         where: { channelId: channel.channelId }
@@ -63,10 +70,10 @@ export class DatabaseAdapter {
           title: channel.title,
           customUrl: channel.handle,
           thumbnailUrl: channel.thumbnailUrl,
-          viewCount: BigInt(channel.viewCount || 0),
-          totalViews: BigInt(channel.viewCount || 0),
-          totalSubscribers: BigInt(channel.subscriberCount || 0),
-          videoCount: channel.videoCount || 0,
+          viewCount: BigInt(viewCount),
+          totalViews: BigInt(viewCount),
+          totalSubscribers: BigInt(subscriberCount),
+          videoCount: videoCount,
           note: channel.note,
           status: 'active'
         }

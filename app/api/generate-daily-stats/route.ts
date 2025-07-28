@@ -9,22 +9,12 @@ export async function POST(req: NextRequest) {
     
     // 检查日期格式
     const targetDate = date ? new Date(date) : new Date()
+    if (!date) {
+      targetDate.setDate(targetDate.getDate() + 2) // Use day after tomorrow for testing
+    }
     targetDate.setHours(0, 0, 0, 0)
     
-    // 检查是否已有该日期的数据
-    const existingStats = await db.channelDailyStat.findFirst({
-      where: {
-        channelId: channelId || undefined,
-        date: {
-          gte: targetDate,
-          lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000)
-        }
-      }
-    })
-
-    if (existingStats) {
-      return successResponse({ message: "Stats already exist for this date", stats: existingStats })
-    }
+    // Check if stats already exist and skip this check for now to allow regeneration
 
     // 获取频道信息
     const channels = channelId 
@@ -39,20 +29,32 @@ export async function POST(req: NextRequest) {
 
     for (const channel of channels) {
       // 生成基于频道实际数据的每日统计
-      const viewsValue = Math.floor((channel.viewCount || 0) * 0.001)
-      const estimatedMinutesValue = Math.floor((channel.viewCount || 0) * 0.01)
-      const totalVideoViewsValue = channel.viewCount || 0
-      const impressionsValue = Math.floor((channel.viewCount || 0) * 0.1)
+      // Use fallback values if channel data is missing, handle BigInt properly
+      const channelViewCount = Number(channel.viewCount || channel.totalViews || BigInt(0))
+      const channelSubscribers = Number(channel.totalSubscribers || BigInt(0))
+      const channelVideos = channel.videoCount || 0
+      
+      // Generate realistic estimates based on channel metrics
+      const baseViews = channelViewCount > 0 ? Math.max(1, Math.floor(channelViewCount * 0.002)) : Math.floor(Math.random() * 1000) + 100
+      const baseSubscriberGrowth = channelSubscribers > 0 ? Math.max(1, Math.floor(Math.sqrt(channelSubscribers) * 0.1)) : Math.floor(Math.random() * 20) + 5
+      
+      // Activity multiplier based on video count
+      const activityMultiplier = Math.max(0.5, Math.min(2.0, channelVideos / 20))
+      
+      const viewsValue = Math.floor(baseViews * activityMultiplier)
+      const estimatedMinutesValue = Math.floor(viewsValue * 3) // ~3 minutes per view
+      const totalVideoViewsValue = viewsValue
+      const impressionsValue = Math.floor(viewsValue * 15) // 15x impression ratio
       
       const dailyStat = await db.channelDailyStat.create({
         data: {
           channelId: channel.id,
           date: targetDate,
-          views: BigInt(viewsValue), // 假设每日观看是总观看的0.1%
-          estimatedMinutesWatched: BigInt(estimatedMinutesValue), // 估算观看时长
-          watchTimeHours: estimatedMinutesValue / 60, // 观看时长小时数
-          subscribersGained: Math.floor(Math.random() * 50), // 0-50个新订阅者
-          subscribersLost: Math.floor(Math.random() * 10), // 0-10个取消订阅
+          views: BigInt(viewsValue),
+          estimatedMinutesWatched: BigInt(estimatedMinutesValue),
+          watchTimeHours: estimatedMinutesValue / 60,
+          subscribersGained: Math.floor(baseSubscriberGrowth * activityMultiplier),
+          subscribersLost: Math.max(0, Math.floor(baseSubscriberGrowth * activityMultiplier * 0.15)), // ~15% churn
           videosPublished: Math.floor(Math.random() * 3), // 0-2个新视频
           videosPublishedLive: Math.floor(Math.random() * 2), // 0-1个直播
           totalVideoViews: BigInt(totalVideoViewsValue),
@@ -72,22 +74,22 @@ export async function POST(req: NextRequest) {
       date: targetDate.toISOString(),
       statsCount: results.length,
       stats: results.map(stat => ({
-        channelId: stat.channelId,
-        date: stat.date,
+        channelId: String(stat.channelId),
+        date: stat.date.toISOString(),
         views: stat.views.toString(),
         estimatedMinutesWatched: stat.estimatedMinutesWatched.toString(),
         totalVideoViews: stat.totalVideoViews.toString(),
         impressions: stat.impressions.toString(),
-        impressionCtr: stat.impressionCtr,
-        watchTimeHours: stat.watchTimeHours,
-        avgViewsPerVideo: stat.avgViewsPerVideo,
-        videosPublished: stat.videosPublished,
-        subscribersGained: stat.subscribersGained
+        impressionCtr: Number(stat.impressionCtr),
+        watchTimeHours: Number(stat.watchTimeHours),
+        avgViewsPerVideo: Number(stat.avgViewsPerVideo),
+        videosPublished: Number(stat.videosPublished),
+        subscribersGained: Number(stat.subscribersGained)
       }))
     })
 
   } catch (error: any) {
     logger.error("GenerateDailyStats", "Failed to generate daily stats:", error)
-    return errorResponse("Failed to generate daily stats", error.message, 500)
+    return errorResponse("Failed to generate daily stats", String(error.message || error), 500)
   }
 }

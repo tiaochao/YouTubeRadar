@@ -16,13 +16,15 @@ export async function GET(req: NextRequest) {
       return successResponse([]) // 返回空数组而不是错误
     }
     
-    // 获取指定天数内的数据
-    const startDate = new Date()
+    // 获取指定天数内的数据，计算正确的日期范围
+    const now = new Date()
+    const endDate = new Date(now)
+    endDate.setDate(endDate.getDate() + 1) // 包含今天
+    endDate.setHours(0, 0, 0, 0)
+    
+    const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - days)
     startDate.setHours(0, 0, 0, 0)
-    
-    const endDate = new Date()
-    endDate.setHours(23, 59, 59, 999)
 
     let dailyActivity: Array<{
       date: Date
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
         WHERE cds.date >= ${startDate}
           AND cds.date <= ${endDate}
           AND (cds.videos_published > 0 OR cds.views > 0)
-        ORDER BY cds.date DESC, cds.videos_published DESC
+        ORDER BY cds.date DESC, cds.views DESC
       `
     } catch (queryError: any) {
       logger.error("DailyActivity", "Query failed:", queryError)
@@ -91,8 +93,8 @@ export async function GET(req: NextRequest) {
         id: record.channel_id,
         title: record.channel_title,
         videosPublished: record.videos_published,
-        videosPublishedLive: record.videos_published_live,
-        totalVideoViews: record.total_video_views.toString(),
+        videosPublishedLive: record.videos_published_live || 0,
+        totalVideoViews: record.total_video_views?.toString() || "0",
         dailyViews: record.daily_views.toString(),
         subscribersGained: record.subscribers_gained
       })
