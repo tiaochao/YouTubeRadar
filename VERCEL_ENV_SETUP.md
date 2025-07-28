@@ -17,7 +17,7 @@ SUPABASE_SERVICE_KEY
 3. 确保以下变量也已设置（应该已经存在）：
 ```
 DATABASE_URL
-值: postgresql://postgres:54DG979491%21@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres
+值: postgresql://postgres:54DG979491!@db.ufcszgnfhiurfzrknofr.supabase.co:5432/postgres?sslmode=require&connect_timeout=60&application_name=youtuberadar
 
 YOUTUBE_API_KEY
 值: AIzaSyDNCuHT7Bw7VO5AtWWzqrogsumX4Uvxej4
