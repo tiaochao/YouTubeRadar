@@ -59,17 +59,44 @@ export async function GET(req: NextRequest) {
       channels?.map(ch => [ch.channel_id, ch.title]) || []
     )
     
-    // 格式化数据
-    const formattedActivity = dailyStats.map(stat => ({
-      date: stat.date,
-      channel_id: stat.channel_id,
-      channel_title: channelMap.get(stat.channel_id) || 'Unknown Channel',
-      videos_published: stat.videos_published || 0,
-      videos_published_live: stat.videos_published_live || 0,
-      total_video_views: stat.total_video_views?.toString() || '0',
-      daily_views: stat.views?.toString() || '0',
-      subscribers_gained: stat.subscribers_gained || 0
-    }))
+    // 按日期分组数据
+    const groupedByDate = new Map<string, any[]>()
+    
+    dailyStats.forEach(stat => {
+      const date = stat.date
+      if (!groupedByDate.has(date)) {
+        groupedByDate.set(date, [])
+      }
+      
+      groupedByDate.get(date)!.push({
+        id: stat.channel_id,
+        title: channelMap.get(stat.channel_id) || 'Unknown Channel',
+        videosPublished: stat.videos_published || 0,
+        videosPublishedLive: stat.videos_published_live || 0,
+        totalVideoViews: stat.total_video_views?.toString() || '0',
+        dailyViews: stat.views?.toString() || '0',
+        subscribersGained: stat.subscribers_gained || 0
+      })
+    })
+    
+    // 转换为页面期望的格式
+    const formattedActivity = Array.from(groupedByDate.entries()).map(([date, channels]) => {
+      const totalVideos = channels.reduce((sum, ch) => sum + ch.videosPublished + ch.videosPublishedLive, 0)
+      const totalViews = channels.reduce((sum, ch) => sum + parseInt(ch.dailyViews), 0)
+      const totalSubscribersGained = channels.reduce((sum, ch) => sum + ch.subscribersGained, 0)
+      
+      return {
+        date,
+        channels,
+        totalVideos,
+        totalChannels: channels.length,
+        totalViews: totalViews.toString(),
+        totalSubscribersGained
+      }
+    })
+    
+    // 按日期倒序排序
+    formattedActivity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     
     return successResponse(formattedActivity)
     
