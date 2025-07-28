@@ -27,9 +27,8 @@ export function getSupabase() {
   if (!supabase) {
     // 直接使用配置的 URL 和密钥
     const url = process.env.SUPABASE_URL || 'https://ufcszgnfhiurfzrknofr.supabase.co'
-    // 使用您提供的 anon key
-    const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzM2OTQsImV4cCI6MjA2NTc0OTY5NH0._MedjtAfZbs9r_VDb-X7zaHEB_m7SRKHJaae4UWVSTM'
-    const serviceKey = process.env.SUPABASE_SERVICE_KEY || anonKey
+    // 使用您提供的 service key
+    const serviceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY3N6Z25maGl1cmZ6cmtub2ZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDE3MzY5NCwiZXhwIjoyMDY1NzQ5Njk0fQ.sb_secret_B9auZ3f53JzphAUE2jdTVg_UWOcaDD7'
     
     console.log('Initializing Supabase client with URL:', url)
     
