@@ -82,7 +82,10 @@
       "Bash(PORT=3001 npm run start)",
       "WebFetch(domain:youtuberadar888.vercel.app)",
       "Bash(./setup-vercel-db.sh:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(for i in {1..3})",
+      "Bash(do echo -n \"尝试 $i: \")",
+      "Bash(done)"
     ],
     "deny": []
   }

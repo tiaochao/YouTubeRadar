@@ -28,141 +28,25 @@ import Link from "next/link"
 import { useI18n } from "@/lib/i18n/use-i18n"
 import { Logo } from "@/components/ui/logo"
 import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
+import { AddChannelModal } from "@/components/add-channel-modal"
 
 // 单独的添加频道组件，避免DOM操作问题
 function AddChannelSection({ onChannelAdded }: { onChannelAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [channelInput, setChannelInput] = useState("")
-  const [isSearching, setIsSearching] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-
-  const handleAddChannel = async () => {
-    if (!channelInput.trim() || isSearching) return
-    
-    setIsSearching(true)
-    setMessage(null)
-    
-    try {
-      const youtubeAPI = new ClientYouTubeAPI()
-      let channel = null
-      
-      if (channelInput.startsWith('@')) {
-        channel = await youtubeAPI.getChannelById(channelInput)
-      } else if (channelInput.includes('youtube.com')) {
-        const match = channelInput.match(/channel\/(UC[\w-]+)/) || 
-                     channelInput.match(/@([\w-]+)/)
-        if (match) {
-          const id = match[0].includes('@') ? `@${match[1]}` : match[1]
-          channel = await youtubeAPI.getChannelById(id)
-        }
-      } else {
-        channel = await youtubeAPI.searchChannel(channelInput)
-      }
-
-      if (channel) {
-        const newChannel = {
-          channelId: channel.id,
-          title: channel.snippet.title,
-          handle: channel.snippet.customUrl || `@${channel.id}`,
-          thumbnailUrl: channel.snippet.thumbnails.medium.url,
-          viewCount: parseInt(channel.statistics.viewCount) || 0,
-          subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
-          videoCount: parseInt(channel.statistics.videoCount) || 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        const addResponse = await fetch('/api/channels-new', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'add',
-            channelData: newChannel
-          })
-        })
-        
-        console.log('添加频道响应状态:', addResponse.status)
-        const addData = await addResponse.json()
-        console.log('添加频道响应数据:', addData)
-        
-        if (addData.ok) {
-          setMessage({ type: 'success', text: '频道添加成功' })
-          setChannelInput("")
-          setIsOpen(false)
-          onChannelAdded()
-        } else {
-          console.error('添加频道失败:', addData)
-          throw new Error(addData.error || '添加频道失败')
-        }
-      } else {
-        setMessage({ type: 'error', text: '未找到频道' })
-      }
-    } catch (error: any) {
-      console.error('Failed to add channel - Full error:', error)
-      console.error('Error stack:', error.stack)
-      const errorMessage = error.message || '添加频道失败'
-      
-      if (errorMessage.includes('API key not valid')) {
-        setMessage({ type: 'error', text: 'API 密钥无效，请检查设置中的 API 密钥' })
-      } else if (errorMessage.includes('quotaExceeded')) {
-        setMessage({ type: 'error', text: 'API 配额已超限，请明天再试' })
-      } else if (errorMessage.includes('forbidden')) {
-        setMessage({ type: 'error', text: 'API 访问被拒绝，请检查 API 密钥权限' })
-      } else {
-        setMessage({ type: 'error', text: `添加失败: ${errorMessage}` })
-      }
-    } finally {
-      setIsSearching(false)
-    }
-  }
-
-  if (!isOpen) {
-    return (
-      <Button onClick={() => setIsOpen(true)} size="sm">
-        <Plus className="mr-2 h-4 w-4" />
-        添加频道
-      </Button>
-    )
-  }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setIsOpen(false)}>
-      <div className="bg-white rounded-lg p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold mb-4">添加频道</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          输入频道名称、@handle 或 YouTube 链接
-        </p>
-        
-        {message && (
-          <Alert className={`mb-4 ${message.type === 'error' ? 'border-red-500' : 'border-green-500'}`}>
-            <AlertDescription>{message.text}</AlertDescription>
-          </Alert>
-        )}
-        
-        <Input
-          placeholder="例如: @mkbhd 或 Marques Brownlee"
-          value={channelInput}
-          onChange={(e) => setChannelInput(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && !isSearching) {
-              e.preventDefault()
-              handleAddChannel()
-            }
-          }}
-          disabled={isSearching}
-          className="mb-4"
-        />
-        
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSearching}>
-            取消
-          </Button>
-          <Button onClick={handleAddChannel} disabled={isSearching || !channelInput.trim()}>
-            {isSearching ? '搜索中...' : '添加'}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <>
+      <Button onClick={() => setIsOpen(true)} size="sm">
+        <Plus className="mr-2 h-4 w-4" />
+        <span>添加频道</span>
+      </Button>
+      
+      <AddChannelModal 
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onChannelAdded={onChannelAdded}
+      />
+    </>
   )
 }
 
@@ -439,7 +323,7 @@ export default function HomePage() {
             variant="outline"
             disabled={isSyncing || channels.length === 0}
           >
-            {isSyncing ? '同步中...' : '一键同步'}
+            <span>{isSyncing ? '同步中...' : '一键同步'}</span>
           </Button>
           <Button 
             onClick={handleGenerateDailyStats}
