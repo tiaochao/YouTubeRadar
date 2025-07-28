@@ -196,12 +196,35 @@ export default function HomePage() {
     setMessage(null)
     
     try {
+      // 检查是否有频道
+      if (channels.length === 0) {
+        setMessageWithTimeout({ type: 'error', text: '没有可同步的频道' })
+        return
+      }
+
       const youtubeAPI = new ClientYouTubeAPI()
       let successCount = 0
       let failCount = 0
+      let errors: string[] = []
+      
+      // 检查 API 密钥
+      if (!youtubeAPI['apiKey']) {
+        setMessageWithTimeout({ 
+          type: 'error', 
+          text: '请先在设置中配置 YouTube API 密钥' 
+        })
+        return
+      }
+
+      setMessageWithTimeout({ 
+        type: 'success', 
+        text: `开始同步 ${channels.length} 个频道...` 
+      })
       
       for (const channel of channels) {
         try {
+          console.log(`正在同步频道: ${channel.title} (${channel.channelId || channel.id})`)
+          
           const updatedChannel = await youtubeAPI.getChannelById(channel.channelId || channel.id)
           if (updatedChannel) {
             const updated = {
@@ -229,25 +252,48 @@ export default function HomePage() {
             const updateData = await updateResponse.json()
             if (updateData.ok) {
               successCount++
+              console.log(`频道 ${channel.title} 同步成功`)
             } else {
               failCount++
+              const error = `频道 ${channel.title}: ${updateData.error || '更新失败'}`
+              errors.push(error)
+              console.error(error)
             }
+          } else {
+            failCount++
+            const error = `频道 ${channel.title}: 无法获取频道信息`
+            errors.push(error)
+            console.error(error)
           }
-        } catch (error) {
-          console.error(`Failed to sync channel ${channel.channelId || channel.id}:`, error)
+        } catch (error: any) {
           failCount++
+          const errorMsg = `频道 ${channel.title}: ${error.message || '同步失败'}`
+          errors.push(errorMsg)
+          console.error(`Failed to sync channel ${channel.channelId || channel.id}:`, error)
         }
       }
       
       await loadChannels()
-      setMessageWithTimeout({ 
-        type: 'success', 
-        text: `同步完成：更新 ${successCount} 个频道，失败 ${failCount} 个` 
-      })
       
-    } catch (error) {
+      if (failCount === 0) {
+        setMessageWithTimeout({ 
+          type: 'success', 
+          text: `同步完成！成功更新 ${successCount} 个频道` 
+        })
+      } else {
+        const errorDetails = errors.length > 0 ? `\n错误详情: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '等' : ''}` : ''
+        setMessageWithTimeout({ 
+          type: failCount === channels.length ? 'error' : 'success',
+          text: `同步完成：成功 ${successCount} 个，失败 ${failCount} 个${errorDetails}` 
+        })
+      }
+      
+    } catch (error: any) {
       console.error('Sync failed:', error)
-      setMessageWithTimeout({ type: 'error', text: '同步失败' })
+      setMessageWithTimeout({ 
+        type: 'error', 
+        text: `同步失败: ${error.message || '未知错误'}` 
+      })
     } finally {
       setIsSyncing(false)
     }

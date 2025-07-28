@@ -157,8 +157,14 @@ export class DatabaseAdapter {
   async isConnected(): Promise<boolean> {
     try {
       await db.$queryRaw`SELECT 1`
+      console.log('Database connection test passed')
       return true
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Database connection test failed:', {
+        name: error.name,
+        message: error.message,
+        code: error.code
+      })
       return false
     }
   }

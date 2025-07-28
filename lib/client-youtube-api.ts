@@ -42,6 +42,10 @@ export class ClientYouTubeAPI {
                   (typeof window !== 'undefined' ? localStorage.getItem('youtube_api_key') : null) || 
                   process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 
                   ''
+    
+    if (!this.apiKey) {
+      console.warn('YouTube API key not configured. Some features may not work.')
+    }
   }
 
   // 搜索频道
@@ -72,6 +76,10 @@ export class ClientYouTubeAPI {
 
   // 通过 ID 或 handle 获取频道
   async getChannelById(channelId: string): Promise<YouTubeChannel | null> {
+    if (!this.apiKey) {
+      throw new Error('YouTube API key is not configured')
+    }
+
     try {
       // 支持 @handle 格式
       const params = channelId.startsWith('@') 
@@ -79,23 +87,50 @@ export class ClientYouTubeAPI {
         : `id=${channelId}`
         
       const url = `${API_BASE}/channels?part=snippet,statistics&${params}&key=${this.apiKey}`
-      console.log('获取频道 URL:', url)
+      console.log('获取频道 URL:', url.replace(this.apiKey, '***'))
+      
       const res = await fetch(url)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      }
+      
       const data = await res.json()
-      console.log('频道响应:', data)
+      console.log('频道响应状态:', { 
+        hasItems: !!data.items, 
+        itemCount: data.items?.length || 0,
+        hasError: !!data.error 
+      })
       
       if (data.error) {
-        console.error('API 错误:', data.error)
-        throw new Error(data.error.message || 'API 请求失败')
+        console.error('YouTube API 错误:', data.error)
+        let errorMessage = data.error.message || 'API 请求失败'
+        
+        // 针对常见错误提供友好提示
+        if (data.error.code === 403) {
+          errorMessage = 'API 密钥无效或已超出配额限制'
+        } else if (data.error.code === 404) {
+          errorMessage = '找不到指定的频道'
+        } else if (data.error.code === 400) {
+          errorMessage = '请求参数错误'
+        }
+        
+        throw new Error(errorMessage)
       }
       
       if (!data.items || data.items.length === 0) {
+        console.warn(`频道 ${channelId} 未找到`)
         return null
       }
       
       return data.items[0]
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取频道失败:', error)
+      
+      // 网络错误友好提示
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('网络连接失败，请检查网络连接')
+      }
+      
       throw error
     }
   }
