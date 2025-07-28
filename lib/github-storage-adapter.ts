@@ -111,6 +111,58 @@ export class GitHubStorageAdapter {
     }
   }
 
+  // 从进程环境变量加载GitHub配置
+  private async loadConfigFromSystem(): Promise<boolean> {
+    if (this.isConfigured()) {
+      return true // 已经配置过了
+    }
+
+    try {
+      // 尝试从进程环境变量加载
+      const token = process.env.__GITHUB_TOKEN
+      const owner = process.env.__GITHUB_OWNER
+      const repo = process.env.__GITHUB_REPO
+      const branch = process.env.__GITHUB_BRANCH
+      const filePath = process.env.__GITHUB_FILE_PATH
+      
+      if (token && owner && repo) {
+        this.config = {
+          token,
+          owner,
+          repo,
+          branch: branch || this.defaultBranch,
+          filePath: filePath || this.defaultFilePath
+        }
+        
+        this.octokit = new Octokit({
+          auth: token,
+        })
+        
+        console.log('GitHub config loaded from process environment')
+        return true
+      }
+    } catch (error) {
+      console.log('Failed to load GitHub config from process:', error)
+    }
+    
+    return false
+  }
+
+  // 保存配置到进程环境变量（临时方案）
+  private saveConfigToProcess(config: GitHubConfig) {
+    try {
+      // 将配置保存到进程环境变量中
+      process.env.__GITHUB_TOKEN = config.token
+      process.env.__GITHUB_OWNER = config.owner
+      process.env.__GITHUB_REPO = config.repo
+      process.env.__GITHUB_BRANCH = config.branch || this.defaultBranch
+      process.env.__GITHUB_FILE_PATH = config.filePath || this.defaultFilePath
+      console.log('GitHub config saved to process environment')
+    } catch (error) {
+      console.error('Failed to save GitHub config to process:', error)
+    }
+  }
+
   // 配置GitHub存储
   configure(config: GitHubConfig): void {
     this.config = {
@@ -122,6 +174,9 @@ export class GitHubStorageAdapter {
     this.octokit = new Octokit({
       auth: config.token,
     })
+
+    // 保存配置到进程环境
+    this.saveConfigToProcess(this.config)
   }
 
   // 检查是否已配置
@@ -129,9 +184,18 @@ export class GitHubStorageAdapter {
     return !!(this.config && this.octokit)
   }
 
+  // 确保配置已加载
+  private async ensureConfigured(): Promise<boolean> {
+    if (this.isConfigured()) {
+      return true
+    }
+    
+    return await this.loadConfigFromSystem()
+  }
+
   // 读取GitHub上的数据文件
   private async readDataFromGitHub(): Promise<StorageData> {
-    if (!this.isConfigured()) {
+    if (!(await this.ensureConfigured())) {
       throw new Error('GitHub storage not configured')
     }
 
@@ -201,7 +265,7 @@ export class GitHubStorageAdapter {
 
   // 写入数据到GitHub
   private async writeDataToGitHub(data: StorageData): Promise<void> {
-    if (!this.isConfigured()) {
+    if (!(await this.ensureConfigured())) {
       throw new Error('GitHub storage not configured')
     }
 
@@ -499,7 +563,7 @@ export class GitHubStorageAdapter {
 
   // 检查连接状态
   async isConnected(): Promise<boolean> {
-    if (!this.isConfigured()) {
+    if (!(await this.ensureConfigured())) {
       return false
     }
 
