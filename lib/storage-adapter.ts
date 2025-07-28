@@ -22,6 +22,7 @@ type StorageType = 'github' | 'fileStorage' | 'memoryStorage' | 'localStorage'
 
 class StorageAdapter {
   private _storageType: StorageType | null = null
+  private _githubFailed: boolean = false
   
   // 检查并确定使用哪种存储方式
   private async detectStorageType(): Promise<StorageType> {
@@ -35,20 +36,35 @@ class StorageAdapter {
     if (isServer) {
       // 服务器端优先级: GitHub > FileStorage > MemoryStorage
       
-      // 1. 首先尝试GitHub存储
-      const githubConnected = await githubStorageAdapter.isConnected()
-      if (githubConnected) {
-        this._storageType = 'github'
-        console.log('Storage adapter using: GitHub Storage')
-        return 'github'
+      // 1. 首先尝试GitHub存储（除非之前失败过）
+      if (!this._githubFailed) {
+        try {
+          const githubConnected = await githubStorageAdapter.isConnected()
+          console.log('GitHub存储连接检查结果:', githubConnected)
+          if (githubConnected) {
+            this._storageType = 'github'
+            console.log('Storage adapter using: GitHub Storage')
+            return 'github'
+          }
+        } catch (error) {
+          console.log('GitHub存储检查失败:', error)
+          this._githubFailed = true
+        }
+      } else {
+        console.log('跳过GitHub存储检查（之前已失败）')
       }
       
       // 2. 然后尝试文件存储
-      const fileConnected = await fileStorageAdapter.isConnected()
-      if (fileConnected) {
-        this._storageType = 'fileStorage'
-        console.log('Storage adapter using: File Storage')
-        return 'fileStorage'
+      try {
+        const fileConnected = await fileStorageAdapter.isConnected()
+        console.log('文件存储连接检查结果:', fileConnected)
+        if (fileConnected) {
+          this._storageType = 'fileStorage'
+          console.log('Storage adapter using: File Storage')
+          return 'fileStorage'
+        }
+      } catch (error) {
+        console.log('文件存储检查失败:', error)
       }
       
       // 3. 最后使用内存存储作为服务器端回退
@@ -88,8 +104,25 @@ class StorageAdapter {
 
   // 添加频道
   async addChannel(channel: Omit<Channel, 'createdAt' | 'updatedAt'>): Promise<Channel | null> {
-    const adapter = await this.getAdapter()
-    return adapter.addChannel(channel)
+    try {
+      const adapter = await this.getAdapter()
+      return await adapter.addChannel(channel)
+    } catch (error: any) {
+      console.error('存储适配器操作失败，尝试切换存储类型:', error.message)
+      
+      // 如果当前是GitHub存储，且操作失败，则重置存储类型选择
+      if (this._storageType === 'github') {
+        console.log('GitHub存储操作失败，重置存储类型选择')
+        this._storageType = null
+        this._githubFailed = true
+        
+        // 再次尝试获取适配器（这次会跳过GitHub存储）
+        const fallbackAdapter = await this.getAdapter()
+        return await fallbackAdapter.addChannel(channel)
+      }
+      
+      throw error
+    }
   }
 
   // 更新频道

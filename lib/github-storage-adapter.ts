@@ -320,7 +320,15 @@ export class GitHubStorageAdapter {
 
   async addChannel(channel: Omit<Channel, 'createdAt' | 'updatedAt'>): Promise<Channel | null> {
     try {
+      console.log('GitHub存储适配器：开始添加频道', { channelId: channel.channelId, title: channel.title })
+      console.log('GitHub存储适配器：当前配置状态', { 
+        isConfigured: this.isConfigured(),
+        hasConfig: !!this.config,
+        hasOctokit: !!this.octokit 
+      })
+      
       const data = await this.readDataFromGitHub()
+      console.log('GitHub存储适配器：成功读取数据', { channelsCount: data.channels.length })
       
       // 检查是否已存在
       if (data.channels.find(ch => ch.channelId === channel.channelId)) {
@@ -335,11 +343,19 @@ export class GitHubStorageAdapter {
       }
       
       data.channels.push(newChannel)
+      console.log('GitHub存储适配器：开始写入数据到GitHub')
       await this.writeDataToGitHub(data)
+      console.log('GitHub存储适配器：成功写入数据到GitHub')
       
       return newChannel
-    } catch (error) {
-      console.error('Failed to add channel:', error)
+    } catch (error: any) {
+      console.error('GitHub存储适配器：添加频道失败', {
+        error: error.message,
+        stack: error.stack,
+        isConfigured: this.isConfigured(),
+        hasConfig: !!this.config,
+        hasOctokit: !!this.octokit
+      })
       throw error
     }
   }
