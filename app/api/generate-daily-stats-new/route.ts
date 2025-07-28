@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseWithNewKeys } from "@/lib/supabase-new"
 import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
+import { YouTubeAnalyticsAPI, YouTubeOAuth } from "@/lib/youtube-analytics-api"
 import { successResponse, errorResponse } from "@/lib/api-response"
 
 export async function POST(req: NextRequest) {
@@ -95,20 +96,64 @@ export async function POST(req: NextRequest) {
         console.log(`无法获取频道 ${channel.channel_id} 的视频数据:`, videoError)
       }
       
+      // 尝试从 YouTube Analytics API 获取真实数据
+      let analyticsData = {
+        views: dailyVideoViews,
+        estimatedMinutesWatched: 0,
+        watchTimeHours: 0,
+        subscribersGained: 0,
+        subscribersLost: 0
+      }
+      
+      // 检查是否配置了 Analytics API
+      const refreshToken = req.cookies.get('youtube_analytics_refresh_token')?.value
+      if (refreshToken) {
+        try {
+          // 获取 OAuth 凭据
+          const clientId = req.cookies.get('youtube_analytics_client_id')?.value || ''
+          const clientSecret = req.cookies.get('youtube_analytics_client_secret')?.value || ''
+          
+          if (clientId && clientSecret) {
+            // 刷新访问令牌
+            const tokenData = await YouTubeOAuth.refreshAccessToken(
+              refreshToken,
+              clientId,
+              clientSecret
+            )
+            
+            if (tokenData) {
+              // 使用 Analytics API 获取数据
+              const analyticsAPI = new YouTubeAnalyticsAPI(tokenData.access_token)
+              const stats = await analyticsAPI.getChannelDailyStats(channel.channel_id, targetDateStr)
+              
+              if (stats) {
+                analyticsData = {
+                  views: stats.views,
+                  estimatedMinutesWatched: stats.estimatedMinutesWatched,
+                  watchTimeHours: Math.floor(stats.estimatedMinutesWatched / 60),
+                  subscribersGained: stats.subscribersGained,
+                  subscribersLost: stats.subscribersLost
+                }
+              }
+            }
+          }
+        } catch (analyticsError) {
+          console.log(`无法获取频道 ${channel.channel_id} 的 Analytics 数据:`, analyticsError)
+        }
+      }
+      
       // 创建每日统计记录
-      // 注意：YouTube Data API v3 不提供历史每日统计数据
-      // 只能记录当前快照和当日发布的视频信息
       const dailyStat = {
         id: generateUUID(),
         channel_id: channel.channel_id,
         date: targetDateStr,
-        views: dailyVideoViews, // 当日发布视频的观看数
-        watch_time_hours: 0, // 需要 Analytics API
-        subscribers_gained: 0, // 需要 Analytics API
-        subscribers_lost: 0, // 需要 Analytics API
-        estimated_minutes_watched: 0, // 需要 Analytics API
-        impressions: 0, // 需要 Analytics API
-        impression_ctr: 0, // 需要 Analytics API
+        views: analyticsData.views,
+        watch_time_hours: analyticsData.watchTimeHours,
+        subscribers_gained: analyticsData.subscribersGained,
+        subscribers_lost: analyticsData.subscribersLost,
+        estimated_minutes_watched: analyticsData.estimatedMinutesWatched,
+        impressions: 0, // Analytics API v2 不提供展示次数
+        impression_ctr: 0, // Analytics API v2 不提供点击率
         videos_published: videosPublished,
         videos_published_live: videosPublishedLive,
         total_video_views: Number(channel.view_count || 0), // 频道总观看数快照

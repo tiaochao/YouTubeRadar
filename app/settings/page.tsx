@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Save, Key } from "lucide-react"
+import { Settings, Save, Key, BarChart3, Database } from "lucide-react"
+import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useI18n } from "@/lib/i18n/use-i18n"
@@ -159,6 +160,25 @@ export default function SettingsPage() {
                   </ol>
                 </AlertDescription>
               </Alert>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                YouTube Analytics API
+              </CardTitle>
+              <CardDescription>
+                获取详细的频道分析数据，包括观看时长、订阅者变化等
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/settings/analytics">
+                  配置 Analytics API
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
