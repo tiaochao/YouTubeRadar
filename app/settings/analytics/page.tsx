@@ -14,12 +14,12 @@ export default function AnalyticsSettingsPage() {
   const [clientSecret, setClientSecret] = useState("")
   const [refreshToken, setRefreshToken] = useState("")
   const [isConnected, setIsConnected] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // 检查是否在客户端环境
-    if (typeof window === 'undefined') return
+    setMounted(true)
     
     // 从本地存储加载配置
     const savedClientId = localStorage.getItem('youtube_analytics_client_id') || ''
@@ -27,6 +27,10 @@ export default function AnalyticsSettingsPage() {
     
     setClientId(savedClientId)
     setClientSecret(savedClientSecret)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     
     // 检查服务器端存储的 refresh token
     checkConnectionStatus()
@@ -40,10 +44,13 @@ export default function AnalyticsSettingsPage() {
       // 重新检查连接状态
       setTimeout(checkConnectionStatus, 1000)
     }
-  }, [])
+  }, [mounted])
 
   const checkConnectionStatus = async () => {
+    if (!mounted) return
+    
     try {
+      setLoading(true)
       const response = await fetch('/api/analytics', {
         method: 'GET',
         credentials: 'include'
@@ -58,6 +65,8 @@ export default function AnalyticsSettingsPage() {
     } catch (error) {
       console.error('Failed to check connection status:', error)
       setIsConnected(false)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -71,12 +80,12 @@ export default function AnalyticsSettingsPage() {
   }
 
   const handleConnect = async () => {
-    if (typeof window === 'undefined') return
-    
-    if (!clientId) {
+    if (!mounted || !clientId) {
       setMessage({ type: 'error', text: '请先输入 Client ID' })
       return
     }
+    
+    setLoading(true)
 
     // 生成 OAuth URL
     const redirectUri = window.location.origin + '/api/auth/youtube/callback'
@@ -104,10 +113,12 @@ export default function AnalyticsSettingsPage() {
       
       if (!response.ok) {
         setMessage({ type: 'error', text: '保存设置失败，请重试' })
+        setLoading(false)
         return
       }
     } catch (error) {
       setMessage({ type: 'error', text: '保存设置失败，请重试' })
+      setLoading(false)
       return
     }
     
@@ -119,9 +130,10 @@ export default function AnalyticsSettingsPage() {
   }
 
   const handleDisconnect = async () => {
-    if (typeof window === 'undefined') return
+    if (!mounted) return
     
     try {
+      setLoading(true)
       // 删除服务器端存储的 refresh token
       const response = await fetch('/api/analytics', {
         method: 'DELETE',
@@ -138,7 +150,19 @@ export default function AnalyticsSettingsPage() {
     } catch (error) {
       console.error('Failed to disconnect:', error)
       setMessage({ type: 'error', text: '断开连接失败' })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  // 如果还未挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <h1 className="text-3xl font-bold mb-6">YouTube Analytics API 设置</h1>
+        <div>加载中...</div>
+      </div>
+    )
   }
 
   return (
@@ -230,8 +254,8 @@ export default function AnalyticsSettingsPage() {
               保存设置
             </Button>
             {!isConnected && (
-              <Button onClick={handleConnect} disabled={!clientId}>
-                连接 YouTube Analytics
+              <Button onClick={handleConnect} disabled={!clientId || loading}>
+                {loading ? '连接中...' : '连接 YouTube Analytics'}
               </Button>
             )}
           </div>
