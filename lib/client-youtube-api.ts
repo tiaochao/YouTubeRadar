@@ -107,7 +107,18 @@ export class ClientYouTubeAPI {
         
         // 针对常见错误提供友好提示
         if (data.error.code === 403) {
-          errorMessage = 'API 密钥无效或已超出配额限制'
+          console.error('YouTube API 403错误详情:', data.error)
+          if (data.error.message?.includes('quotaExceeded')) {
+            errorMessage = 'YouTube API 配额已用完，请明天再试或升级配额'
+          } else if (data.error.message?.includes('keyInvalid')) {
+            errorMessage = 'YouTube API 密钥无效，请检查密钥是否正确'
+          } else if (data.error.message?.includes('accessNotConfigured')) {
+            errorMessage = 'YouTube Data API v3 未启用，请在Google Cloud Console中启用'
+          } else if (data.error.message?.includes('refererNotAllowedMapError')) {
+            errorMessage = 'API密钥的HTTP引用者限制阻止了此请求'
+          } else {
+            errorMessage = `API 访问被拒绝 (403): ${data.error.message || '可能是密钥无效或配额超限'}`
+          }
         } else if (data.error.code === 404) {
           errorMessage = '找不到指定的频道'
         } else if (data.error.code === 400) {
@@ -132,6 +143,60 @@ export class ClientYouTubeAPI {
       }
       
       throw error
+    }
+  }
+
+  // 测试API密钥是否有效
+  async testApiKey(): Promise<{ valid: boolean, error?: string, details?: any }> {
+    if (!this.apiKey) {
+      return { 
+        valid: false, 
+        error: 'API密钥未配置' 
+      }
+    }
+
+    try {
+      // 使用一个简单的API调用来测试密钥
+      const url = `${API_BASE}/channels?part=snippet&id=UCuAXFkgsw1L7xaCfnd5JJOw&key=${this.apiKey}`
+      console.log('测试API密钥...')
+      
+      const res = await fetch(url)
+      const data = await res.json()
+      
+      if (data.error) {
+        console.error('API密钥测试失败:', data.error)
+        let errorMessage = data.error.message || 'API测试失败'
+        
+        if (data.error.code === 403) {
+          if (data.error.message?.includes('quotaExceeded')) {
+            errorMessage = 'API配额已用完'
+          } else if (data.error.message?.includes('keyInvalid')) {
+            errorMessage = 'API密钥无效'
+          } else if (data.error.message?.includes('accessNotConfigured')) {
+            errorMessage = 'YouTube Data API v3未启用'
+          } else if (data.error.message?.includes('refererNotAllowedMapError')) {
+            errorMessage = 'HTTP引用者限制'
+          } else {
+            errorMessage = 'API访问被拒绝'
+          }
+        }
+        
+        return { 
+          valid: false, 
+          error: errorMessage,
+          details: data.error 
+        }
+      }
+      
+      console.log('API密钥测试成功')
+      return { valid: true }
+      
+    } catch (error: any) {
+      console.error('API密钥测试异常:', error)
+      return { 
+        valid: false, 
+        error: error.message || '网络连接失败' 
+      }
     }
   }
 

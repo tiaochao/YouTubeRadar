@@ -11,6 +11,7 @@ import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useI18n } from "@/lib/i18n/use-i18n"
+import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
 
 export default function SettingsPage() {
   const { t } = useI18n()
@@ -34,6 +35,8 @@ export default function SettingsPage() {
     repoInfo: null
   })
   const [testingGithub, setTestingGithub] = useState(false)
+  const [testingApiKey, setTestingApiKey] = useState(false)
+  const [apiKeyTestResult, setApiKeyTestResult] = useState<{ valid: boolean, error?: string } | null>(null)
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -115,6 +118,31 @@ export default function SettingsPage() {
   }
 
   // 保存设置
+  // 测试API密钥
+  const handleTestApiKey = async () => {
+    setTestingApiKey(true)
+    setApiKeyTestResult(null)
+    setMessage(null)
+    
+    try {
+      const youtubeAPI = new ClientYouTubeAPI(apiKey)
+      const testResult = await youtubeAPI.testApiKey()
+      
+      setApiKeyTestResult(testResult)
+      
+      if (testResult.valid) {
+        setMessage({ type: 'success', text: 'API密钥测试成功！' })
+      } else {
+        setMessage({ type: 'error', text: `API密钥测试失败: ${testResult.error}` })
+      }
+    } catch (error: any) {
+      setApiKeyTestResult({ valid: false, error: error.message })
+      setMessage({ type: 'error', text: `测试失败: ${error.message}` })
+    } finally {
+      setTestingApiKey(false)
+    }
+  }
+
   const handleSave = () => {
     setSaving(true)
     setMessage(null)
