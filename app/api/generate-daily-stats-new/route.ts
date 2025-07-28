@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseWithNewKeys } from "@/lib/supabase-new"
+import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
 import { successResponse, errorResponse } from "@/lib/api-response"
 
 export async function POST(req: NextRequest) {
@@ -59,25 +60,59 @@ export async function POST(req: NextRequest) {
         });
       }
       
-      // 生成基于频道实际数据的每日统计
-      const viewCount = Number(channel.view_count || 0)
-      const subscriberCount = Number(channel.total_subscribers || 0)
+      // 获取当日发布的视频数据
+      let videosPublished = 0
+      let videosPublishedLive = 0
+      let dailyVideoViews = 0
       
+      try {
+        const youtubeAPI = new ClientYouTubeAPI()
+        const videos = await youtubeAPI.getChannelVideos(channel.channel_id, 50)
+        
+        // 筛选当日发布的视频
+        const todaysVideos = videos.filter(video => {
+          const publishedAt = new Date(video.snippet.publishedAt)
+          const videoDateStr = publishedAt.toISOString().split('T')[0]
+          return videoDateStr === targetDateStr
+        })
+        
+        // 统计视频类型
+        videosPublished = todaysVideos.filter(v => 
+          !v.snippet.title.toLowerCase().includes('live') && 
+          !v.snippet.title.toLowerCase().includes('直播')
+        ).length
+        
+        videosPublishedLive = todaysVideos.filter(v => 
+          v.snippet.title.toLowerCase().includes('live') || 
+          v.snippet.title.toLowerCase().includes('直播')
+        ).length
+        
+        // 计算当日视频的总观看数
+        dailyVideoViews = todaysVideos.reduce((sum, video) => {
+          return sum + parseInt(video.statistics.viewCount || '0')
+        }, 0)
+      } catch (videoError) {
+        console.log(`无法获取频道 ${channel.channel_id} 的视频数据:`, videoError)
+      }
+      
+      // 创建每日统计记录
+      // 注意：YouTube Data API v3 不提供历史每日统计数据
+      // 只能记录当前快照和当日发布的视频信息
       const dailyStat = {
         id: generateUUID(),
         channel_id: channel.channel_id,
         date: targetDateStr,
-        views: Math.floor(viewCount * 0.001), // 假设每日观看是总观看的0.1%
-        watch_time_hours: Math.floor(viewCount * 0.001 * 5 / 60), // 假设平均观看5分钟
-        subscribers_gained: Math.floor(Math.random() * 50), // 0-50个新订阅者
-        subscribers_lost: Math.floor(Math.random() * 10), // 0-10个取消订阅
-        estimated_minutes_watched: Math.floor(viewCount * 0.01), // 估算观看时长
-        impressions: Math.floor(viewCount * 0.1), // 展示次数
-        impression_ctr: Math.random() * 10, // 0-10% 点击率
-        videos_published: Math.floor(Math.random() * 3), // 0-2个新视频
-        videos_published_live: Math.floor(Math.random() * 2), // 0-1个直播
-        total_video_views: viewCount,
-        avg_views_per_video: channel.video_count ? Math.floor(viewCount / channel.video_count) : 0,
+        views: dailyVideoViews, // 当日发布视频的观看数
+        watch_time_hours: 0, // 需要 Analytics API
+        subscribers_gained: 0, // 需要 Analytics API
+        subscribers_lost: 0, // 需要 Analytics API
+        estimated_minutes_watched: 0, // 需要 Analytics API
+        impressions: 0, // 需要 Analytics API
+        impression_ctr: 0, // 需要 Analytics API
+        videos_published: videosPublished,
+        videos_published_live: videosPublishedLive,
+        total_video_views: Number(channel.view_count || 0), // 频道总观看数快照
+        avg_views_per_video: channel.video_count ? Math.floor(Number(channel.view_count || 0) / channel.video_count) : 0,
         updated_at: new Date().toISOString()
       }
       
