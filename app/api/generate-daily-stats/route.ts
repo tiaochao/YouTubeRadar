@@ -39,20 +39,26 @@ export async function POST(req: NextRequest) {
 
     for (const channel of channels) {
       // 生成基于频道实际数据的每日统计
+      const viewsValue = Math.floor((channel.viewCount || 0) * 0.001)
+      const estimatedMinutesValue = Math.floor((channel.viewCount || 0) * 0.01)
+      const totalVideoViewsValue = channel.viewCount || 0
+      const impressionsValue = Math.floor((channel.viewCount || 0) * 0.1)
+      
       const dailyStat = await db.channelDailyStat.create({
         data: {
           channelId: channel.id,
           date: targetDate,
-          views: BigInt(Math.floor((channel.viewCount || 0) * 0.001)), // 假设每日观看是总观看的0.1%
-          estimatedMinutesWatched: BigInt(Math.floor((channel.viewCount || 0) * 0.01)), // 估算观看时长
-          averageViewDuration: Math.floor(Math.random() * 300) + 120, // 2-7分钟
+          views: BigInt(viewsValue), // 假设每日观看是总观看的0.1%
+          estimatedMinutesWatched: BigInt(estimatedMinutesValue), // 估算观看时长
+          watchTimeHours: estimatedMinutesValue / 60, // 观看时长小时数
           subscribersGained: Math.floor(Math.random() * 50), // 0-50个新订阅者
           subscribersLost: Math.floor(Math.random() * 10), // 0-10个取消订阅
           videosPublished: Math.floor(Math.random() * 3), // 0-2个新视频
           videosPublishedLive: Math.floor(Math.random() * 2), // 0-1个直播
-          totalVideoViews: BigInt(channel.viewCount || 0),
-          impressions: BigInt(Math.floor((channel.viewCount || 0) * 0.1)), // 展示次数
-          impressionsCtr: Math.random() * 10 // 0-10% 点击率
+          totalVideoViews: BigInt(totalVideoViewsValue),
+          impressions: BigInt(impressionsValue), // 展示次数
+          impressionCtr: Math.random() * 0.1, // 0-10% 点击率 (修正为小数)
+          avgViewsPerVideo: viewsValue > 0 ? viewsValue / Math.max(1, Math.floor(Math.random() * 3)) : 0
         }
       })
 
@@ -69,6 +75,12 @@ export async function POST(req: NextRequest) {
         channelId: stat.channelId,
         date: stat.date,
         views: stat.views.toString(),
+        estimatedMinutesWatched: stat.estimatedMinutesWatched.toString(),
+        totalVideoViews: stat.totalVideoViews.toString(),
+        impressions: stat.impressions.toString(),
+        impressionCtr: stat.impressionCtr,
+        watchTimeHours: stat.watchTimeHours,
+        avgViewsPerVideo: stat.avgViewsPerVideo,
         videosPublished: stat.videosPublished,
         subscribersGained: stat.subscribersGained
       }))
