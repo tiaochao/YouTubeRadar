@@ -1,4 +1,5 @@
-// 统一存储适配器 - 自动选择文件存储或浏览器本地存储
+// 统一存储适配器 - 自动选择GitHub、文件存储或浏览器本地存储
+import { githubStorageAdapter } from "./github-storage-adapter"
 import { fileStorageAdapter } from "./file-storage-adapter"
 import { localStorageAdapter } from "./local-storage-adapter"
 
@@ -16,40 +17,63 @@ interface Channel {
   updatedAt: Date
 }
 
+type StorageType = 'github' | 'fileStorage' | 'localStorage'
+
 class StorageAdapter {
-  private _usesDatabase: boolean | null = null
+  private _storageType: StorageType | null = null
   
   // 检查并确定使用哪种存储方式
-  private async detectStorageType(): Promise<boolean> {
-    if (this._usesDatabase !== null) {
-      return this._usesDatabase
+  private async detectStorageType(): Promise<StorageType> {
+    if (this._storageType !== null) {
+      return this._storageType
     }
     
     // 检查是否在服务器端环境
     const isServer = typeof window === 'undefined'
+    
     if (isServer) {
-      // 服务器端使用文件存储
+      // 服务器端优先级: GitHub > FileStorage > LocalStorage
+      
+      // 1. 首先尝试GitHub存储
+      const githubConnected = await githubStorageAdapter.isConnected()
+      if (githubConnected) {
+        this._storageType = 'github'
+        console.log('Storage adapter using: GitHub Storage')
+        return 'github'
+      }
+      
+      // 2. 然后尝试文件存储
       const fileConnected = await fileStorageAdapter.isConnected()
-      this._usesDatabase = fileConnected
-      console.log(`Storage adapter using: ${fileConnected ? 'FileStorage' : 'Fallback'}`)
-      return fileConnected
+      if (fileConnected) {
+        this._storageType = 'fileStorage'
+        console.log('Storage adapter using: File Storage')
+        return 'fileStorage'
+      }
+      
+      // 3. 最后使用localStorage作为回退
+      this._storageType = 'localStorage'
+      console.log('Storage adapter using: LocalStorage (server fallback)')
+      return 'localStorage'
     } else {
       // 客户端使用localStorage
-      this._usesDatabase = false
+      this._storageType = 'localStorage'
       console.log('Storage adapter using: LocalStorage (client-side)')
-      return false
+      return 'localStorage'
     }
   }
   
   // 获取当前存储适配器
   private async getAdapter() {
-    const usesFileStorage = await this.detectStorageType()
-    const isServer = typeof window === 'undefined'
+    const storageType = await this.detectStorageType()
     
-    if (isServer) {
-      return usesFileStorage ? fileStorageAdapter : localStorageAdapter
-    } else {
-      return localStorageAdapter
+    switch (storageType) {
+      case 'github':
+        return githubStorageAdapter
+      case 'fileStorage':
+        return fileStorageAdapter
+      case 'localStorage':
+      default:
+        return localStorageAdapter
     }
   }
   
@@ -84,15 +108,22 @@ class StorageAdapter {
   }
   
   // 获取存储类型信息
-  async getStorageInfo(): Promise<{ type: 'fileStorage' | 'localStorage', connected: boolean }> {
-    const usesFileStorage = await this.detectStorageType()
+  async getStorageInfo(): Promise<{ type: StorageType, connected: boolean, details?: any }> {
+    const storageType = await this.detectStorageType()
     const adapter = await this.getAdapter()
     const connected = await adapter.isConnected()
-    const isServer = typeof window === 'undefined'
+    
+    let details: any = {}
+    
+    // 如果是GitHub存储，添加仓库信息
+    if (storageType === 'github' && 'getRepoInfo' in adapter) {
+      details.repoInfo = (adapter as any).getRepoInfo()
+    }
     
     return {
-      type: (isServer && usesFileStorage) ? 'fileStorage' : 'localStorage',
-      connected
+      type: storageType,
+      connected,
+      details
     }
   }
 }

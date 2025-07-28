@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Save, Key, BarChart3, Database } from "lucide-react"
+import { Settings, Save, Key, BarChart3, Database, Github, TestTube } from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -17,13 +17,45 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [apiKey, setApiKey] = useState('')
+  const [githubConfig, setGithubConfig] = useState({
+    token: '',
+    owner: '',
+    repo: '',
+    branch: 'main',
+    filePath: 'data/youtube-radar-data.json'
+  })
+  const [githubStatus, setGithubStatus] = useState<{
+    configured: boolean
+    connected: boolean
+    repoInfo: any
+  }>({
+    configured: false,
+    connected: false,
+    repoInfo: null
+  })
+  const [testingGithub, setTestingGithub] = useState(false)
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // 加载保存的API密钥
     const savedApiKey = localStorage.getItem('youtube_api_key') || ''
     setApiKey(savedApiKey)
+    
+    // 加载GitHub配置状态
+    loadGithubStatus()
   }, [])
+
+  const loadGithubStatus = async () => {
+    try {
+      const response = await fetch('/api/github-config')
+      const data = await response.json()
+      if (data.ok) {
+        setGithubStatus(data.data)
+      }
+    } catch (error) {
+      console.error('Failed to load GitHub status:', error)
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -32,6 +64,55 @@ export default function SettingsPage() {
       }
     }
   }, [])
+
+  // 配置GitHub存储
+  const handleGithubConfig = async () => {
+    setTestingGithub(true)
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/github-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(githubConfig)
+      })
+      
+      const data = await response.json()
+      if (data.ok) {
+        setMessage({ type: 'success', text: 'GitHub存储配置成功！' })
+        await loadGithubStatus()
+      } else {
+        setMessage({ type: 'error', text: data.error || 'GitHub配置失败' })
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `配置失败: ${error.message}` })
+    } finally {
+      setTestingGithub(false)
+    }
+  }
+
+  // 测试GitHub连接
+  const handleTestGithub = async () => {
+    setTestingGithub(true)
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/github-config', {
+        method: 'PUT'
+      })
+      
+      const data = await response.json()
+      if (data.ok) {
+        setMessage({ type: 'success', text: 'GitHub连接测试成功！' })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'GitHub连接测试失败' })
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `测试失败: ${error.message}` })
+    } finally {
+      setTestingGithub(false)
+    }
+  }
 
   // 保存设置
   const handleSave = () => {
@@ -179,6 +260,119 @@ export default function SettingsPage() {
                   配置 Analytics API
                 </Link>
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Github className="h-5 w-5" />
+                GitHub 数据存储
+              </CardTitle>
+              <CardDescription>
+                将数据存储到GitHub仓库，实现永久保存和跨设备同步
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {githubStatus.configured && githubStatus.repoInfo && (
+                <Alert>
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <span>
+                        当前仓库: <strong>{githubStatus.repoInfo.owner}/{githubStatus.repoInfo.repo}</strong>
+                      </span>
+                      <span className={`text-sm ${githubStatus.connected ? 'text-green-600' : 'text-red-600'}`}>
+                        {githubStatus.connected ? '✓ 已连接' : '✗ 连接失败'}
+                      </span>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="githubToken">GitHub Token</Label>
+                  <Input
+                    id="githubToken"
+                    type="password"
+                    placeholder="ghp_xxxxxxxxxxxx"
+                    value={githubConfig.token}
+                    onChange={(e) => setGithubConfig(prev => ({ ...prev, token: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="githubOwner">仓库所有者</Label>
+                  <Input
+                    id="githubOwner"
+                    placeholder="用户名或组织名"
+                    value={githubConfig.owner}
+                    onChange={(e) => setGithubConfig(prev => ({ ...prev, owner: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="githubRepo">仓库名称</Label>
+                  <Input
+                    id="githubRepo"
+                    placeholder="my-youtube-data"
+                    value={githubConfig.repo}
+                    onChange={(e) => setGithubConfig(prev => ({ ...prev, repo: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="githubBranch">分支名称</Label>
+                  <Input
+                    id="githubBranch"
+                    placeholder="main"
+                    value={githubConfig.branch}
+                    onChange={(e) => setGithubConfig(prev => ({ ...prev, branch: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="githubFilePath">文件路径</Label>
+                <Input
+                  id="githubFilePath"
+                  placeholder="data/youtube-radar-data.json"
+                  value={githubConfig.filePath}
+                  onChange={(e) => setGithubConfig(prev => ({ ...prev, filePath: e.target.value }))}
+                />
+              </div>
+
+              <Alert>
+                <AlertDescription>
+                  <p className="font-medium mb-2">如何获取 GitHub Token：</p>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>访问 GitHub Settings → Developer settings → Personal access tokens</li>
+                    <li>点击 "Generate new token (classic)"</li>
+                    <li>选择权限：repo (完整仓库访问权限)</li>
+                    <li>复制生成的 token 并粘贴到上方</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGithubConfig}
+                  disabled={testingGithub || !githubConfig.token || !githubConfig.owner || !githubConfig.repo}
+                  className="flex-1"
+                >
+                  {testingGithub ? '配置中...' : '保存配置'}
+                </Button>
+                {githubStatus.configured && (
+                  <Button 
+                    onClick={handleTestGithub}
+                    disabled={testingGithub}
+                    variant="outline"
+                  >
+                    <TestTube className="h-4 w-4 mr-2" />
+                    测试连接
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
