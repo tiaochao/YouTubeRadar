@@ -18,6 +18,9 @@ export default function AnalyticsSettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
 
   useEffect(() => {
+    // 检查是否在客户端环境
+    if (typeof window === 'undefined') return
+    
     // 从本地存储加载配置
     const savedClientId = localStorage.getItem('youtube_analytics_client_id') || ''
     const savedClientSecret = localStorage.getItem('youtube_analytics_client_secret') || ''
@@ -30,6 +33,8 @@ export default function AnalyticsSettingsPage() {
   }, [])
 
   const handleSave = () => {
+    if (typeof window === 'undefined') return
+    
     localStorage.setItem('youtube_analytics_client_id', clientId)
     localStorage.setItem('youtube_analytics_client_secret', clientSecret)
     setMessage({ type: 'success', text: '设置已保存' })
@@ -37,6 +42,8 @@ export default function AnalyticsSettingsPage() {
   }
 
   const handleConnect = async () => {
+    if (typeof window === 'undefined') return
+    
     if (!clientId) {
       setMessage({ type: 'error', text: '请先输入 Client ID' })
       return
@@ -61,6 +68,8 @@ export default function AnalyticsSettingsPage() {
   }
 
   const handleDisconnect = () => {
+    if (typeof window === 'undefined') return
+    
     localStorage.removeItem('youtube_analytics_refresh_token')
     setRefreshToken('')
     setIsConnected(false)
@@ -173,7 +182,7 @@ export default function AnalyticsSettingsPage() {
               <li>创建新项目或选择现有项目</li>
               <li>启用 YouTube Data API v3 和 YouTube Analytics API</li>
               <li>创建 OAuth 2.0 凭据</li>
-              <li>添加授权重定向 URI: <code className="bg-background px-1">{window.location.origin}/api/auth/youtube/callback</code></li>
+              <li>添加授权重定向 URI: <code className="bg-background px-1">{typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com'}/api/auth/youtube/callback</code></li>
               <li>复制 Client ID 和 Client Secret</li>
             </ol>
           </div>
