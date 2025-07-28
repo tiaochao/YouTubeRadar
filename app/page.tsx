@@ -308,7 +308,7 @@ export default function HomePage() {
 
   const handleGenerateDailyStats = async () => {
     try {
-      const response = await fetch('/api/generate-daily-stats', {
+      const response = await fetch('/api/generate-daily-stats-new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})

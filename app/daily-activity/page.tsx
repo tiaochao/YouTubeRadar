@@ -46,7 +46,7 @@ export default function DailyActivityPage() {
     
     try {
       // 尝试从 API 获取数据
-      const response = await fetch(`/api/daily-activity?days=${days}`)
+      const response = await fetch(`/api/daily-activity-new?days=${days}`)
       const data = await response.json()
       
       if (data.ok && data.data && data.data.length > 0) {
