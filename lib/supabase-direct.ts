@@ -43,15 +43,27 @@ export function getSupabase() {
 // 频道操作的直接实现
 export const supabaseChannelOps = {
   async getChannels() {
-    const supabase = getSupabase()
-    const { data, error } = await supabase
-      .from('channels')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    return data || []
+    try {
+      const supabase = getSupabase()
+      console.log('Getting channels from Supabase...')
+      
+      const { data, error } = await supabase
+        .from('channels')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Error getting channels:', error)
+        throw error
+      }
+      
+      console.log(`Found ${data?.length || 0} channels`)
+      return data || []
+    } catch (e: any) {
+      console.error('Failed to get channels:', e)
+      throw e
+    }
   },
 
   async addChannel(channel: any) {

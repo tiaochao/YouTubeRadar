@@ -5,22 +5,38 @@ export async function GET() {
   try {
     console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL)
     console.log('DATABASE_URL prefix:', process.env.DATABASE_URL?.substring(0, 30) + '...')
+    console.log('SUPABASE_URL:', process.env.SUPABASE_URL)
+    console.log('SUPABASE_SERVICE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY)
     
-    const supabase = getSupabase()
+    let supabase;
+    try {
+      supabase = getSupabase()
+      console.log('Supabase client created successfully')
+    } catch (initError: any) {
+      console.error('Failed to initialize Supabase:', initError)
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to initialize Supabase client',
+        details: initError.message,
+        stack: initError.stack
+      }, { status: 500 })
+    }
     
     // 测试连接 - 获取频道数量
+    console.log('Testing database connection...')
     const { count, error } = await supabase
       .from('channels')
       .select('*', { count: 'exact', head: true })
     
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('Supabase query error:', error)
       return NextResponse.json({
         success: false,
-        error: error.message,
+        error: error.message || 'Unknown error',
         code: error.code,
         details: error.details,
-        hint: error.hint
+        hint: error.hint,
+        errorObject: JSON.stringify(error)
       }, { status: 500 })
     }
     
