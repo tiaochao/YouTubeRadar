@@ -179,6 +179,11 @@ export default function HomePage() {
       }
     } catch (error: any) {
       console.error('Failed to add channel:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response
+      })
       const errorMessage = error.message || '添加频道失败'
       
       // 解析常见的 API 错误
