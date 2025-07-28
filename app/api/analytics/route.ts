@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { successResponse, errorResponse } from "@/lib/api-response"
 import { logger } from "@/lib/logger"
@@ -7,6 +8,15 @@ import { parseISO } from "date-fns"
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
+    
+    // 如果没有任何查询参数，检查连接状态
+    if (searchParams.toString() === '') {
+      const refreshToken = req.cookies.get('youtube_analytics_refresh_token')?.value
+      return successResponse({
+        hasRefreshToken: !!refreshToken
+      })
+    }
+
     const page = Number.parseInt(searchParams.get("page") || "1")
     const pageSize = Number.parseInt(searchParams.get("pageSize") || "10")
     const channelId = searchParams.get("channelId") || ""
@@ -63,5 +73,19 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     logger.error("API/Analytics", "Failed to fetch daily analytics.", error)
     return errorResponse("Failed to fetch daily analytics.", error.message, 500)
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    // 删除 refresh token cookie
+    const response = NextResponse.json({ success: true })
+    response.cookies.delete('youtube_analytics_refresh_token')
+    
+    logger.info("API/Analytics", "Refresh token cleared successfully")
+    return response
+  } catch (error: any) {
+    logger.error("API/Analytics", "Failed to clear refresh token.", error)
+    return errorResponse("Failed to clear refresh token.", error.message, 500)
   }
 }

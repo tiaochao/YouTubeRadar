@@ -24,13 +24,42 @@ export default function AnalyticsSettingsPage() {
     // 从本地存储加载配置
     const savedClientId = localStorage.getItem('youtube_analytics_client_id') || ''
     const savedClientSecret = localStorage.getItem('youtube_analytics_client_secret') || ''
-    const savedRefreshToken = localStorage.getItem('youtube_analytics_refresh_token') || ''
     
     setClientId(savedClientId)
     setClientSecret(savedClientSecret)
-    setRefreshToken(savedRefreshToken)
-    setIsConnected(!!savedRefreshToken)
+    
+    // 检查服务器端存储的 refresh token
+    checkConnectionStatus()
+    
+    // 检查 URL 参数中的成功状态
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('success') === 'true') {
+      setMessage({ type: 'success', text: 'YouTube Analytics 连接成功！' })
+      // 清除 URL 参数
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // 重新检查连接状态
+      setTimeout(checkConnectionStatus, 1000)
+    }
   }, [])
+
+  const checkConnectionStatus = async () => {
+    try {
+      const response = await fetch('/api/analytics', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const hasToken = data.hasRefreshToken || false
+        setIsConnected(hasToken)
+        setRefreshToken(hasToken ? 'stored' : '')
+      }
+    } catch (error) {
+      console.error('Failed to check connection status:', error)
+      setIsConnected(false)
+    }
+  }
 
   const handleSave = () => {
     if (typeof window === 'undefined') return
@@ -67,13 +96,27 @@ export default function AnalyticsSettingsPage() {
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
   }
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
     if (typeof window === 'undefined') return
     
-    localStorage.removeItem('youtube_analytics_refresh_token')
-    setRefreshToken('')
-    setIsConnected(false)
-    setMessage({ type: 'info', text: '已断开连接' })
+    try {
+      // 删除服务器端存储的 refresh token
+      const response = await fetch('/api/analytics', {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        setRefreshToken('')
+        setIsConnected(false)
+        setMessage({ type: 'info', text: '已断开连接' })
+      } else {
+        setMessage({ type: 'error', text: '断开连接失败' })
+      }
+    } catch (error) {
+      console.error('Failed to disconnect:', error)
+      setMessage({ type: 'error', text: '断开连接失败' })
+    }
   }
 
   return (

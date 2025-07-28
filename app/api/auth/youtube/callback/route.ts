@@ -59,6 +59,21 @@ export async function GET(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 365 // 1 year
     })
     
+    // 同时将 client credentials 保存到 cookie，供后续使用
+    response.cookies.set('youtube_analytics_client_id', clientId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365 // 1 year
+    })
+    
+    response.cookies.set('youtube_analytics_client_secret', clientSecret, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365 // 1 year
+    })
+    
     return response
     
   } catch (error) {
