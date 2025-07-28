@@ -89,7 +89,29 @@ export default function AnalyticsSettingsPage() {
       prompt: 'consent'
     })
     
-    // 保存当前设置
+    // 保存当前设置到服务器端 cookies 以供 OAuth 回调使用
+    try {
+      const response = await fetch('/api/auth/youtube/prepare', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId,
+          clientSecret
+        })
+      })
+      
+      if (!response.ok) {
+        setMessage({ type: 'error', text: '保存设置失败，请重试' })
+        return
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: '保存设置失败，请重试' })
+      return
+    }
+    
+    // 保存到本地存储
     handleSave()
     
     // 重定向到 Google OAuth

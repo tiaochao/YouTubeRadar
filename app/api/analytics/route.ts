@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
     // 如果没有任何查询参数，检查连接状态
     if (searchParams.toString() === '') {
       const refreshToken = req.cookies.get('youtube_analytics_refresh_token')?.value
+      console.log('[Analytics API] Connection status check:', {
+        hasRefreshToken: !!refreshToken,
+        allCookies: req.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value }))
+      })
       return successResponse({
         hasRefreshToken: !!refreshToken
       })
