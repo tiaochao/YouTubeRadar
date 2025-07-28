@@ -474,9 +474,25 @@ export class FileStorageAdapter {
   // 检查连接状态
   async isConnected(): Promise<boolean> {
     try {
+      // 检查是否在只读文件系统中（如Vercel/Lambda）
+      if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        return false
+      }
+      
       await this.ensureDirectories()
-      return true
+      
+      // 尝试写入测试文件来验证写入权限
+      const testFile = path.join(this.dataDir, 'test-write-permission.tmp')
+      try {
+        await fs.writeFile(testFile, 'test')
+        await fs.unlink(testFile) // 删除测试文件
+        return true
+      } catch (writeError) {
+        console.log('File storage not available - no write permission:', writeError)
+        return false
+      }
     } catch (error) {
+      console.log('File storage not available:', error)
       return false
     }
   }
