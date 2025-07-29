@@ -9,11 +9,15 @@ const loginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Login request received')
+    
     const body = await req.json()
+    console.log('Login attempt for username:', body.username)
     
     // 验证请求数据
     const validation = loginSchema.safeParse(body)
     if (!validation.success) {
+      console.error('Login validation failed:', validation.error.errors)
       return NextResponse.json({
         ok: false,
         error: validation.error.errors[0].message
@@ -23,9 +27,11 @@ export async function POST(req: NextRequest) {
     const { username, password } = validation.data
     
     // 验证用户登录
+    console.log('Attempting login for user:', username)
     const result = await AuthService.login(username, password)
     
     if (!result) {
+      console.log('Login failed for user:', username)
       return NextResponse.json({
         ok: false,
         error: "用户名或密码错误"
@@ -33,6 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { user, token } = result
+    console.log('Login successful for user:', username)
     
     // 创建响应
     const response = NextResponse.json({
@@ -57,10 +64,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Login error:', error)
+    console.error('Error stack:', error.stack)
     
     return NextResponse.json({
       ok: false,
-      error: error.message || "登录失败"
+      error: error.message || "登录失败",
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 })
   }
 }

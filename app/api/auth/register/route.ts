@@ -10,11 +10,15 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Registration request received')
+    
     const body = await req.json()
+    console.log('Request body parsed:', { username: body.username, hasPassword: !!body.password })
     
     // 验证请求数据
     const validation = registerSchema.safeParse(body)
     if (!validation.success) {
+      console.error('Validation failed:', validation.error.errors)
       return NextResponse.json({
         ok: false,
         error: validation.error.errors[0].message
@@ -22,6 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { username, password, email } = validation.data
+    console.log('Starting user registration for:', username)
     
     // 注册用户
     const user = await AuthService.register(
@@ -31,11 +36,14 @@ export async function POST(req: NextRequest) {
     )
 
     if (!user) {
+      console.error('User registration returned null')
       return NextResponse.json({
         ok: false,
         error: "注册失败"
       }, { status: 500 })
     }
+
+    console.log('User registered successfully:', user.username)
 
     // 返回成功响应（不包含密码哈希）
     const { passwordHash, ...userWithoutPassword } = user
@@ -50,10 +58,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Registration error:', error)
+    console.error('Error stack:', error.stack)
     
     return NextResponse.json({
       ok: false,
-      error: error.message || "注册失败"
-    }, { status: 400 })
+      error: error.message || "注册失败",
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }

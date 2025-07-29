@@ -20,8 +20,15 @@ export interface JWTPayload {
   exp?: number
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-dev-key-change-in-production'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
+
+// 检查生产环境是否配置了JWT密钥
+function validateJWTConfig() {
+  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET)) {
+    console.warn('Warning: JWT_SECRET not configured for production. Using fallback key.')
+  }
+}
 
 export class AuthService {
   // 密码加密
@@ -37,12 +44,14 @@ export class AuthService {
 
   // 生成JWT token
   static generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
+    validateJWTConfig()
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
   }
 
   // 验证JWT token
   static verifyToken(token: string): JWTPayload | null {
     try {
+      validateJWTConfig()
       return jwt.verify(token, JWT_SECRET) as JWTPayload
     } catch (error) {
       console.error('Token verification failed:', error)
