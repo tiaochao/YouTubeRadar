@@ -90,7 +90,8 @@
       "Bash(nslookup:*)",
       "Bash(nc:*)",
       "WebFetch(domain:supabase.com)",
-      "WebFetch(domain:youtube-radar-9fc4fbxgo-xiaotiaochaos-projects.vercel.app)"
+      "WebFetch(domain:youtube-radar-9fc4fbxgo-xiaotiaochaos-projects.vercel.app)",
+      "Bash(env)"
     ],
     "deny": []
   }
