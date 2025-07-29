@@ -5,7 +5,6 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { I18nProvider } from "@/lib/i18n"
 import { NavSidebar } from "@/components/nav-sidebar"
-import { AuthProvider } from "@/components/auth/auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -30,12 +29,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <I18nProvider>
-            <AuthProvider>
-              <div className="flex min-h-screen w-full flex-col bg-muted/40">
-                <NavSidebar />
-                <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">{children}</div>
-              </div>
-            </AuthProvider>
+            <div className="flex min-h-screen w-full flex-col bg-muted/40">
+              <NavSidebar />
+              <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">{children}</div>
+            </div>
           </I18nProvider>
         </ThemeProvider>
       </body>
