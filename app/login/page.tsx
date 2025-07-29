@@ -17,9 +17,12 @@ export default function LoginPage() {
       try {
         const response = await fetch('/api/auth/me')
         if (response.ok) {
-          // 用户已登录，重定向到主页
-          router.push('/')
-          return
+          const result = await response.json()
+          if (result.ok) {
+            // 用户已登录，重定向到主页
+            router.push('/')
+            return
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error)

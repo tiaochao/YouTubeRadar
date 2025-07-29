@@ -29,20 +29,23 @@ export async function middleware(req: NextRequest) {
   ]
 
   const publicRoutes = [
-    '/login',      // 登录页面
-    '/api/auth'    // 认证API路由
+    '/login',       // 登录页面
+    '/api/auth/',   // 认证API路由
+    '/api/health',  // 健康检查
+    '/_next/',      // Next.js静态资源
+    '/favicon.ico'  // 网站图标
   ]
 
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/')
+  const isPublicRoute = publicRoutes.some(route => 
+    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route)
   )
   
-  const isPublicRoute = publicRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  )
+  const isProtectedRoute = protectedRoutes.some(route => 
+    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/')
+  ) && !isPublicRoute
 
   // 如果是受保护的路由，检查用户认证
-  if (isProtectedRoute && !isPublicRoute) {
+  if (isProtectedRoute) {
     const token = req.cookies.get('auth_token')?.value
     
     if (!token) {

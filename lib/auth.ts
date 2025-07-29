@@ -256,25 +256,34 @@ export class AuthService {
 
 // 从cookie或header中提取token
 export function extractTokenFromRequest(request: Request): string | null {
-  // 首先检查Authorization header
-  const authHeader = request.headers.get('authorization')
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7)
-  }
+  try {
+    // 首先检查Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7)
+    }
 
-  // 然后检查cookie
-  const cookieHeader = request.headers.get('cookie')
-  if (cookieHeader) {
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [name, value] = cookie.trim().split('=')
-      acc[name] = value
-      return acc
-    }, {} as Record<string, string>)
-    
-    return cookies.auth_token || null
-  }
+    // 然后检查cookie
+    const cookieHeader = request.headers.get('cookie')
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+        const parts = cookie.trim().split('=')
+        if (parts.length >= 2) {
+          const name = parts[0]
+          const value = parts.slice(1).join('=') // Handle values with = signs
+          acc[name] = decodeURIComponent(value)
+        }
+        return acc
+      }, {} as Record<string, string>)
+      
+      return cookies.auth_token || null
+    }
 
-  return null
+    return null
+  } catch (error) {
+    console.error('Error extracting token from request:', error)
+    return null
+  }
 }
 
 // 认证中间件助手函数
