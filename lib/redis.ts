@@ -1,5 +1,52 @@
 import { Redis as UpstashRedis } from "@upstash/redis"
-import { memoryStore } from "./memory-store"
+
+// Simple in-memory store fallback
+class MemoryStore {
+  private store = new Map<string, { value: string; expiresAt?: number }>()
+
+  async set(key: string, value: string, options?: { ex?: number; nx?: boolean }): Promise<string | null> {
+    if (options?.nx && this.store.has(key)) {
+      const existingItem = this.store.get(key)
+      if (existingItem && existingItem.expiresAt && Date.now() > existingItem.expiresAt) {
+        this.store.delete(key)
+      } else {
+        return null
+      }
+    }
+    
+    const expiresAt = options?.ex ? Date.now() + options.ex * 1000 : undefined
+    this.store.set(key, { value, expiresAt })
+    
+    if (expiresAt) {
+      setTimeout(() => {
+        const item = this.store.get(key)
+        if (item && item.expiresAt && Date.now() > item.expiresAt) {
+          this.store.delete(key)
+        }
+      }, options.ex * 1000)
+    }
+    
+    return "OK"
+  }
+
+  async get(key: string): Promise<string | null> {
+    const item = this.store.get(key)
+    if (!item) return null
+    
+    if (item.expiresAt && Date.now() > item.expiresAt) {
+      this.store.delete(key)
+      return null
+    }
+    
+    return item.value
+  }
+
+  async del(key: string): Promise<void> {
+    this.store.delete(key)
+  }
+}
+
+const memoryStore = new MemoryStore()
 
 // IORedis adapter for compatibility with upstash/redis interface
 class IORedisAdapter {
