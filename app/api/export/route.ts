@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { storageAdapter } from "@/lib/storage-adapter"
-import { fileStorageAdapter } from "@/lib/file-storage-adapter"
+import { db } from "@/lib/db"
 import { format } from "date-fns"
 import { errorResponse, successResponse } from "@/lib/api-response"
 
@@ -16,10 +15,21 @@ export async function GET(req: NextRequest) {
   try {
     if (type === "all") {
       // 导出所有数据
-      data = await fileStorageAdapter.exportData()
+      const channels = await db.channel.findMany({
+        include: {
+          videos: {
+            include: {
+              snapshots: true
+            }
+          },
+          dailyStats: true
+        }
+      })
+      
+      data = { channels, exportDate: new Date().toISOString() }
       filename += "-all"
       
-      return new NextResponse(data, {
+      return new NextResponse(JSON.stringify(data, null, 2), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
@@ -28,7 +38,7 @@ export async function GET(req: NextRequest) {
       })
     } else if (type === "channels") {
       // 导出频道数据
-      const channels = await storageAdapter.getChannels()
+      const channels = await db.channel.findMany()
       data = channelId ? channels.filter(ch => ch.channelId === channelId) : channels
       filename += "-channels"
     } else if (type === "videos") {
@@ -36,11 +46,32 @@ export async function GET(req: NextRequest) {
       if (!channelId) {
         return errorResponse("channelId is required for videos export.", undefined, 400)
       }
-      data = await fileStorageAdapter.getVideosByChannel(channelId)
+      
+      const videos = await db.video.findMany({
+        where: { 
+          channel: { channelId } 
+        },
+        include: {
+          snapshots: true
+        }
+      })
+      
+      data = videos
       filename += `-videos-${channelId}`
     } else if (type === "stats") {
       // 导出统计信息
-      data = await fileStorageAdapter.getStorageStats()
+      const channelCount = await db.channel.count()
+      const videoCount = await db.video.count()
+      const snapshotCount = await db.videoSnapshot.count()
+      
+      data = {
+        stats: {
+          channels: channelCount,
+          videos: videoCount,
+          snapshots: snapshotCount,
+          exportDate: new Date().toISOString()
+        }
+      }
       filename += "-stats"
     } else {
       return errorResponse('Invalid export type. Must be "all", "channels", "videos", or "stats".', undefined, 400)

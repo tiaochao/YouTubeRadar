@@ -93,7 +93,13 @@
       "WebFetch(domain:youtube-radar-9fc4fbxgo-xiaotiaochaos-projects.vercel.app)",
       "Bash(env)",
       "Bash(timeout 10s npm run dev)",
-      "Bash(gtimeout:*)"
+      "Bash(gtimeout:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(sqlite3:*)",
+      "Bash(echo:*)",
+      "Bash(-H \"Content-Type: application/json\" )",
+      "Bash(-d '{\"\"url\"\": \"\"https://www.youtube.com/@testchannel\"\", \"\"channelId\"\": \"\"UCtest123\"\"}' )",
+      "Bash(-w \"\\nHTTP Status: %{http_code}\\n\")"
     ],
     "deny": []
   }

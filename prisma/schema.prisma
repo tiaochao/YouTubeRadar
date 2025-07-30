@@ -3,12 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client-sqlite"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./youtube-analytics.db"
+  url      = env("DATABASE_URL")
 }
 
 model Channel {

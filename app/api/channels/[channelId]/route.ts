@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { storageAdapter } from "@/lib/storage-adapter"
+import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 
 export async function DELETE(

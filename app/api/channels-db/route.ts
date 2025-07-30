@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { storageAdapter } from "@/lib/storage-adapter"
+import { db } from "@/lib/db"
 import { successResponse, errorResponse } from "@/lib/api-response"
 
 // 获取所有频道
 export async function GET() {
   try {
-    // 获取存储信息
-    const storageInfo = await storageAdapter.getStorageInfo()
-    const channels = await storageAdapter.getChannels()
+    const channels = await db.channel.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
     
     return successResponse({ 
       channels, 
-      storageInfo,
+      storageInfo: { type: 'sqlite', connected: true },
       count: channels.length 
     })
   } catch (error: any) {
@@ -25,67 +27,65 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const { action, channelData, channelId } = data
 
-    // 检查存储连接
-    console.log('正在检查存储连接...')
-    const storageInfo = await storageAdapter.getStorageInfo()
-    console.log('存储信息:', storageInfo)
-    
-    const isConnected = await storageAdapter.isConnected()
-    console.log('存储连接状态:', isConnected)
-    
-    if (!isConnected) {
-      console.error('存储连接失败 - 存储类型:', storageInfo.type)
-      return errorResponse("Storage connection failed", `Unable to connect to ${storageInfo.type} storage`, 503)
-    }
-
     if (action === 'add') {
       try {
         console.log('添加频道请求:', { channelData })
-        const newChannel = await storageAdapter.addChannel(channelData)
-        if (newChannel) {
-          console.log('频道添加成功:', newChannel)
-          return successResponse(newChannel)
-        } else {
-          return errorResponse("Failed to add channel", "Database operation failed", 500)
-        }
-      } catch (addError: any) {
-        console.error('添加频道时出错:', addError)
-        console.error('错误详情:', {
-          name: addError.name,
-          message: addError.message,
-          code: addError.code,
-          stack: addError.stack
+        
+        // 检查频道是否已存在
+        const existingChannel = await db.channel.findUnique({
+          where: { channelId: channelData.channelId }
         })
         
-        if (addError.message === '频道已存在') {
+        if (existingChannel) {
           return errorResponse("Channel already exists", "频道已存在", 409)
         }
         
-        // 处理数据库连接超时
-        if (addError.message?.includes('connection pool') || addError.message?.includes('Timed out')) {
-          return errorResponse("Database timeout", "数据库连接超时，请稍后重试", 503)
-        }
+        // 创建新频道
+        const newChannel = await db.channel.create({
+          data: {
+            channelId: channelData.channelId,
+            title: channelData.title,
+            thumbnailUrl: channelData.thumbnailUrl,
+            status: channelData.status || 'active',
+            country: channelData.country,
+            totalViews: channelData.totalViews?.toString() || "0",
+            totalSubscribers: channelData.totalSubscribers?.toString() || "0",
+            note: channelData.note
+          }
+        })
         
-        // 处理BigInt序列化错误
-        if (addError.message?.includes('BigInt')) {
-          return errorResponse("Data format error", "数据格式错误", 400)
-        }
-        
-        return errorResponse("Failed to add channel", addError.message || "Database operation failed", 500)
+        console.log('频道添加成功:', newChannel)
+        return successResponse(newChannel)
+      } catch (addError: any) {
+        console.error('添加频道时出错:', addError)
+        return errorResponse("Failed to add channel", addError.message, 500)
       }
     } else if (action === 'update') {
-      const updatedChannel = await storageAdapter.updateChannel(channelId, channelData)
-      if (updatedChannel) {
+      try {
+        const updatedChannel = await db.channel.update({
+          where: { channelId },
+          data: {
+            title: channelData.title,
+            thumbnailUrl: channelData.thumbnailUrl,
+            status: channelData.status,
+            country: channelData.country,
+            totalViews: channelData.totalViews?.toString(),
+            totalSubscribers: channelData.totalSubscribers?.toString(),
+            note: channelData.note
+          }
+        })
         return successResponse(updatedChannel)
-      } else {
-        return errorResponse("Failed to update channel", "Database operation failed", 500)
+      } catch (updateError: any) {
+        return errorResponse("Failed to update channel", updateError.message, 500)
       }
     } else if (action === 'delete') {
-      const success = await storageAdapter.deleteChannel(channelId)
-      if (success) {
+      try {
+        await db.channel.delete({
+          where: { channelId }
+        })
         return successResponse({ success: true })
-      } else {
-        return errorResponse("Failed to delete channel", "Database operation failed", 500)
+      } catch (deleteError: any) {
+        return errorResponse("Failed to delete channel", deleteError.message, 500)
       }
     }
 
