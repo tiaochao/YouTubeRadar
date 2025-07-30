@@ -150,13 +150,8 @@ export async function POST(req: NextRequest) {
       return errorResponse("Missing data parameter.", undefined, 400)
     }
     
-    const success = await fileStorageAdapter.importData(JSON.stringify(data))
-    
-    if (success) {
-      return successResponse({ message: "Data imported successfully" })
-    } else {
-      return errorResponse("Failed to import data.", "Invalid data format or import error", 500)
-    }
+    // TODO: Implement database import functionality
+    return errorResponse("Import functionality not implemented yet.", "Database import not available", 501)
   } catch (error: any) {
     console.error("Import API error:", error)
     return errorResponse("Failed to import data.", error.message, 500)

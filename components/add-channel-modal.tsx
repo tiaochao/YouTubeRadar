@@ -5,7 +5,6 @@ import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ClientYouTubeAPI } from "@/lib/client-youtube-api"
 
 interface AddChannelModalProps {
   isOpen: boolean
@@ -31,68 +30,37 @@ export function AddChannelModal({ isOpen, onClose, onChannelAdded }: AddChannelM
     setMessage(null)
     
     try {
-      const youtubeAPI = new ClientYouTubeAPI()
-      let channel = null
-      
-      if (channelInput.startsWith('@')) {
-        channel = await youtubeAPI.getChannelById(channelInput)
-      } else if (channelInput.includes('youtube.com')) {
-        const match = channelInput.match(/channel\/(UC[\w-]+)/) || 
-                     channelInput.match(/@([\w-]+)/)
-        if (match) {
-          const id = match[0].includes('@') ? `@${match[1]}` : match[1]
-          channel = await youtubeAPI.getChannelById(id)
-        }
-      } else {
-        channel = await youtubeAPI.searchChannel(channelInput)
-      }
-
-      if (channel) {
-        const newChannel = {
-          channelId: channel.id,
-          title: channel.snippet.title,
-          handle: channel.snippet.customUrl || `@${channel.id}`,
-          thumbnailUrl: channel.snippet.thumbnails.medium.url,
-          viewCount: parseInt(channel.statistics.viewCount) || 0,
-          subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
-          videoCount: parseInt(channel.statistics.videoCount) || 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        const addResponse = await fetch('/api/channels-db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'add',
-            channelData: newChannel
-          })
+      const addResponse = await fetch('/api/channels/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelInput: channelInput.trim()
         })
-        
-        const addData = await addResponse.json()
-        if (addData.ok) {
-          setMessage({ type: 'success', text: '频道添加成功' })
-          setChannelInput("")
-          setTimeout(() => {
-            onClose()
-            onChannelAdded()
-          }, 1000)
-        } else {
-          throw new Error(addData.error || '添加频道失败')
-        }
+      })
+      
+      const addData = await addResponse.json()
+      if (addData.ok) {
+        setMessage({ type: 'success', text: '频道添加成功' })
+        setChannelInput("")
+        setTimeout(() => {
+          onClose()
+          onChannelAdded()
+        }, 1000)
       } else {
-        setMessage({ type: 'error', text: '未找到频道' })
+        throw new Error(addData.error || '添加频道失败')
       }
     } catch (error: any) {
       console.error('Failed to add channel:', error)
       const errorMessage = error.message || '添加频道失败'
       
-      if (errorMessage.includes('API key not valid')) {
+      if (errorMessage.includes('API key not valid') || errorMessage.includes('keyInvalid')) {
         setMessage({ type: 'error', text: 'API 密钥无效，请检查设置中的 API 密钥' })
       } else if (errorMessage.includes('quotaExceeded')) {
         setMessage({ type: 'error', text: 'API 配额已超限，请明天再试' })
-      } else if (errorMessage.includes('forbidden')) {
+      } else if (errorMessage.includes('forbidden') || errorMessage.includes('accessNotConfigured')) {
         setMessage({ type: 'error', text: 'API 访问被拒绝，请检查 API 密钥权限' })
+      } else if (errorMessage.includes('未找到频道')) {
+        setMessage({ type: 'error', text: '未找到频道，请检查输入的频道信息' })
       } else {
         setMessage({ type: 'error', text: `添加失败: ${errorMessage}` })
       }
